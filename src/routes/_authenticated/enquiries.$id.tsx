@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { PIPELINE, STATUS_LABEL, waLink, type EnquiryStatus } from "@/lib/admin";
+import type { TablesUpdate } from "@/integrations/supabase/types";
 import { inr } from "@/lib/shop";
 
 export const Route = createFileRoute("/_authenticated/enquiries/$id")({
@@ -50,7 +51,7 @@ function EnquiryDetail() {
   };
 
   const update = useMutation({
-    mutationFn: async (patch: Record<string, unknown>) => {
+    mutationFn: async (patch: TablesUpdate<"enquiries">) => {
       const { error } = await supabase.from("enquiries").update(patch).eq("id", id);
       if (error) throw error;
     },
@@ -72,7 +73,13 @@ function EnquiryDetail() {
   });
 
   const itemMutation = useMutation({
-    mutationFn: async ({ itemId, patch }: { itemId: string; patch: Record<string, unknown> }) => {
+    mutationFn: async ({
+      itemId,
+      patch,
+    }: {
+      itemId: string;
+      patch: TablesUpdate<"enquiry_items">;
+    }) => {
       const { error } = await supabase.from("enquiry_items").update(patch).eq("id", itemId);
       if (error) throw error;
     },
