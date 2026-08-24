@@ -33,12 +33,12 @@ export const Route = createFileRoute("/")({
 const INTENTS = [
   { emoji: "🎇", label: "I want a ₹1,000 celebration", to: "/build-box", search: { budget: 1000 } },
   { emoji: "🎆", label: "I want a ₹2,500 family pack", to: "/build-box", search: { budget: 2500 } },
-  { emoji: "✨", label: "I want mostly colourful crackers", to: "/catalogue" },
-  { emoji: "👨‍👩‍👧", label: "I need a family-friendly selection", to: "/build-box" },
-  { emoji: "🎁", label: "I want a Diwali gift box", to: "/combos" },
-  { emoji: "💰", label: "Maximum variety within my budget", to: "/build-box" },
-  { emoji: "🛒", label: "I already know what I want", to: "/catalogue" },
-] as const;
+  { emoji: "✨", label: "I want mostly colourful crackers", to: "/catalogue", search: { experience: "colourful" } },
+  { emoji: "👨‍👩‍👧", label: "I need a family-friendly selection", to: "/build-box", search: {} },
+  { emoji: "🎁", label: "I want a Diwali gift box", to: "/combos", search: {} },
+  { emoji: "💰", label: "Maximum variety within my budget", to: "/build-box", search: {} },
+  { emoji: "🛒", label: "I already know what I want", to: "/catalogue", search: {} },
+];
 
 function FeaturedProducts() {
   const { data: products } = useSuspenseQuery(productsQuery);
@@ -80,7 +80,9 @@ function Home() {
                 <Link to="/catalogue">Browse Crackers</Link>
               </Button>
               <Button asChild size="lg" variant="secondary">
-                <Link to="/build-box">Build My Diwali Box</Link>
+                <Link to="/build-box" search={{}}>
+                  Build My Diwali Box
+                </Link>
               </Button>
               <Button asChild size="lg" variant="outline">
                 <Link to="/combos">View Combos</Link>
@@ -115,7 +117,7 @@ function Home() {
             <Link
               key={i.label}
               to={i.to}
-              search={"search" in i ? (i.search as { budget: number }) : undefined}
+              search={i.search}
               className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 text-sm font-medium transition-colors hover:border-primary/40 hover:bg-accent/50"
             >
               <span className="text-xl">{i.emoji}</span>

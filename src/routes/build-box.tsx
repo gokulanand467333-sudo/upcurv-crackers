@@ -13,9 +13,12 @@ import { inr } from "@/lib/shop";
 const BUDGETS = [1000, 2000, 3000, 5000, 10000];
 
 export const Route = createFileRoute("/build-box")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    budget: typeof search.budget === "number" ? search.budget : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { budget?: number } => {
+    const out: { budget?: number } = {};
+    const raw = Number(search["budget"]);
+    if (Number.isFinite(raw) && raw > 0) out.budget = raw;
+    return out;
+  },
   head: () => ({
     meta: [
       { title: "Build My Diwali Box — Upcurv Crackers" },
@@ -35,7 +38,7 @@ export const Route = createFileRoute("/build-box")({
 });
 
 function BuildBox() {
-  const { budget: initial } = Route.useSearch();
+  const initial = Route.useSearch().budget;
   const [budget, setBudget] = useState<number>(initial ?? 2000);
   const [tags, setTags] = useState<string[]>(["family", "variety"]);
   const { data, isLoading } = useQuery(productsQuery);

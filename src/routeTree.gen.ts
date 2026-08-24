@@ -10,33 +10,63 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BuildBoxRouteImport } from './routes/build-box'
+import { Route as CatalogueRouteImport } from './routes/catalogue'
+import { Route as CombosRouteImport } from './routes/combos'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BuildBoxRoute = BuildBoxRouteImport.update({
+  id: '/build-box',
+  path: '/build-box',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CatalogueRoute = CatalogueRouteImport.update({
+  id: '/catalogue',
+  path: '/catalogue',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CombosRoute = CombosRouteImport.update({
+  id: '/combos',
+  path: '/combos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/build-box': typeof BuildBoxRoute
+  '/catalogue': typeof CatalogueRoute
+  '/combos': typeof CombosRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/build-box': typeof BuildBoxRoute
+  '/catalogue': typeof CatalogueRoute
+  '/combos': typeof CombosRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/build-box': typeof BuildBoxRoute
+  '/catalogue': typeof CatalogueRoute
+  '/combos': typeof CombosRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/build-box' | '/catalogue' | '/combos'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/build-box' | '/catalogue' | '/combos'
+  id: '__root__' | '/' | '/build-box' | '/catalogue' | '/combos'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BuildBoxRoute: typeof BuildBoxRoute
+  CatalogueRoute: typeof CatalogueRoute
+  CombosRoute: typeof CombosRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +78,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/build-box': {
+      id: '/build-box'
+      path: '/build-box'
+      fullPath: '/build-box'
+      preLoaderRoute: typeof BuildBoxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/catalogue': {
+      id: '/catalogue'
+      path: '/catalogue'
+      fullPath: '/catalogue'
+      preLoaderRoute: typeof CatalogueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/combos': {
+      id: '/combos'
+      path: '/combos'
+      fullPath: '/combos'
+      preLoaderRoute: typeof CombosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BuildBoxRoute: BuildBoxRoute,
+  CatalogueRoute: CatalogueRoute,
+  CombosRoute: CombosRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

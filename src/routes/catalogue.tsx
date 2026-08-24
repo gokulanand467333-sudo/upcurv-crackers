@@ -12,11 +12,13 @@ import { pick, useLang } from "@/lib/i18n";
 type CatalogueSearch = { category?: string; experience?: string; q?: string };
 
 export const Route = createFileRoute("/catalogue")({
-  validateSearch: (search: Record<string, unknown>): CatalogueSearch => ({
-    category: typeof search.category === "string" ? search.category : undefined,
-    experience: typeof search.experience === "string" ? search.experience : undefined,
-    q: typeof search.q === "string" ? search.q : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): CatalogueSearch => {
+    const out: CatalogueSearch = {};
+    if (typeof search["category"] === "string") out.category = search["category"];
+    if (typeof search["experience"] === "string") out.experience = search["experience"];
+    if (typeof search["q"] === "string") out.q = search["q"];
+    return out;
+  },
   head: () => ({
     meta: [
       { title: "Crackers Catalogue — Upcurv Crackers" },
