@@ -13,6 +13,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as BuildBoxRouteImport } from './routes/build-box'
 import { Route as CatalogueRouteImport } from './routes/catalogue'
 import { Route as CombosRouteImport } from './routes/combos'
+import { Route as EnquiryRouteImport } from './routes/enquiry'
+import { Route as TrackRouteImport } from './routes/track'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,18 +36,32 @@ const CombosRoute = CombosRouteImport.update({
   path: '/combos',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EnquiryRoute = EnquiryRouteImport.update({
+  id: '/enquiry',
+  path: '/enquiry',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrackRoute = TrackRouteImport.update({
+  id: '/track',
+  path: '/track',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/build-box': typeof BuildBoxRoute
   '/catalogue': typeof CatalogueRoute
   '/combos': typeof CombosRoute
+  '/enquiry': typeof EnquiryRoute
+  '/track': typeof TrackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/build-box': typeof BuildBoxRoute
   '/catalogue': typeof CatalogueRoute
   '/combos': typeof CombosRoute
+  '/enquiry': typeof EnquiryRoute
+  '/track': typeof TrackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +69,23 @@ export interface FileRoutesById {
   '/build-box': typeof BuildBoxRoute
   '/catalogue': typeof CatalogueRoute
   '/combos': typeof CombosRoute
+  '/enquiry': typeof EnquiryRoute
+  '/track': typeof TrackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/build-box' | '/catalogue' | '/combos'
+  fullPaths:
+    '/' | '/build-box' | '/catalogue' | '/combos' | '/enquiry' | '/track'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/build-box' | '/catalogue' | '/combos'
-  id: '__root__' | '/' | '/build-box' | '/catalogue' | '/combos'
+  to: '/' | '/build-box' | '/catalogue' | '/combos' | '/enquiry' | '/track'
+  id:
+    | '__root__'
+    | '/'
+    | '/build-box'
+    | '/catalogue'
+    | '/combos'
+    | '/enquiry'
+    | '/track'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -67,6 +93,8 @@ export interface RootRouteChildren {
   BuildBoxRoute: typeof BuildBoxRoute
   CatalogueRoute: typeof CatalogueRoute
   CombosRoute: typeof CombosRoute
+  EnquiryRoute: typeof EnquiryRoute
+  TrackRoute: typeof TrackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -99,6 +127,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CombosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/enquiry': {
+      id: '/enquiry'
+      path: '/enquiry'
+      fullPath: '/enquiry'
+      preLoaderRoute: typeof EnquiryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/track': {
+      id: '/track'
+      path: '/track'
+      fullPath: '/track'
+      preLoaderRoute: typeof TrackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -107,6 +149,8 @@ const rootRouteChildren: RootRouteChildren = {
   BuildBoxRoute: BuildBoxRoute,
   CatalogueRoute: CatalogueRoute,
   CombosRoute: CombosRoute,
+  EnquiryRoute: EnquiryRoute,
+  TrackRoute: TrackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
