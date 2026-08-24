@@ -32,7 +32,7 @@ export const Route = createFileRoute("/enquiry")({
       },
     ],
   }),
-  component: EnquiryPage;
+  component: EnquiryPage,
 });
 
 type Done = { ref: string; estimated: number; itemCount: number; name: string; city: string };
