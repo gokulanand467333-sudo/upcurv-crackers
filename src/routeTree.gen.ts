@@ -10,33 +10,160 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as BuildBoxRouteImport } from './routes/build-box'
+import { Route as CatalogueRouteImport } from './routes/catalogue'
+import { Route as CombosRouteImport } from './routes/combos'
+import { Route as EnquiryRouteImport } from './routes/enquiry'
+import { Route as TrackRouteImport } from './routes/track'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedEnquiriesRouteImport } from './routes/_authenticated/enquiries'
+import { Route as AuthenticatedEnquiriesIdRouteImport } from './routes/_authenticated/enquiries.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BuildBoxRoute = BuildBoxRouteImport.update({
+  id: '/build-box',
+  path: '/build-box',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CatalogueRoute = CatalogueRouteImport.update({
+  id: '/catalogue',
+  path: '/catalogue',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CombosRoute = CombosRouteImport.update({
+  id: '/combos',
+  path: '/combos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EnquiryRoute = EnquiryRouteImport.update({
+  id: '/enquiry',
+  path: '/enquiry',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrackRoute = TrackRouteImport.update({
+  id: '/track',
+  path: '/track',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedEnquiriesRoute = AuthenticatedEnquiriesRouteImport.update({
+  id: '/enquiries',
+  path: '/enquiries',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedEnquiriesIdRoute =
+  AuthenticatedEnquiriesIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedEnquiriesRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/build-box': typeof BuildBoxRoute
+  '/catalogue': typeof CatalogueRoute
+  '/combos': typeof CombosRoute
+  '/enquiry': typeof EnquiryRoute
+  '/track': typeof TrackRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/enquiries': typeof AuthenticatedEnquiriesRouteWithChildren
+  '/enquiries/$id': typeof AuthenticatedEnquiriesIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/build-box': typeof BuildBoxRoute
+  '/catalogue': typeof CatalogueRoute
+  '/combos': typeof CombosRoute
+  '/enquiry': typeof EnquiryRoute
+  '/track': typeof TrackRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/enquiries': typeof AuthenticatedEnquiriesRouteWithChildren
+  '/enquiries/$id': typeof AuthenticatedEnquiriesIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/build-box': typeof BuildBoxRoute
+  '/catalogue': typeof CatalogueRoute
+  '/combos': typeof CombosRoute
+  '/enquiry': typeof EnquiryRoute
+  '/track': typeof TrackRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/enquiries': typeof AuthenticatedEnquiriesRouteWithChildren
+  '/_authenticated/enquiries/$id': typeof AuthenticatedEnquiriesIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/build-box'
+    | '/catalogue'
+    | '/combos'
+    | '/enquiry'
+    | '/track'
+    | '/dashboard'
+    | '/enquiries'
+    | '/enquiries/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/build-box'
+    | '/catalogue'
+    | '/combos'
+    | '/enquiry'
+    | '/track'
+    | '/dashboard'
+    | '/enquiries'
+    | '/enquiries/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/build-box'
+    | '/catalogue'
+    | '/combos'
+    | '/enquiry'
+    | '/track'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/enquiries'
+    | '/_authenticated/enquiries/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  BuildBoxRoute: typeof BuildBoxRoute
+  CatalogueRoute: typeof CatalogueRoute
+  CombosRoute: typeof CombosRoute
+  EnquiryRoute: typeof EnquiryRoute
+  TrackRoute: typeof TrackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +175,115 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/build-box': {
+      id: '/build-box'
+      path: '/build-box'
+      fullPath: '/build-box'
+      preLoaderRoute: typeof BuildBoxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/catalogue': {
+      id: '/catalogue'
+      path: '/catalogue'
+      fullPath: '/catalogue'
+      preLoaderRoute: typeof CatalogueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/combos': {
+      id: '/combos'
+      path: '/combos'
+      fullPath: '/combos'
+      preLoaderRoute: typeof CombosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/enquiry': {
+      id: '/enquiry'
+      path: '/enquiry'
+      fullPath: '/enquiry'
+      preLoaderRoute: typeof EnquiryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/track': {
+      id: '/track'
+      path: '/track'
+      fullPath: '/track'
+      preLoaderRoute: typeof TrackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/enquiries': {
+      id: '/_authenticated/enquiries'
+      path: '/enquiries'
+      fullPath: '/enquiries'
+      preLoaderRoute: typeof AuthenticatedEnquiriesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/enquiries/$id': {
+      id: '/_authenticated/enquiries/$id'
+      path: '/$id'
+      fullPath: '/enquiries/$id'
+      preLoaderRoute: typeof AuthenticatedEnquiriesIdRouteImport
+      parentRoute: typeof AuthenticatedEnquiriesRoute
+    }
   }
 }
 
+interface AuthenticatedEnquiriesRouteChildren {
+  AuthenticatedEnquiriesIdRoute: typeof AuthenticatedEnquiriesIdRoute
+}
+
+const AuthenticatedEnquiriesRouteChildren: AuthenticatedEnquiriesRouteChildren =
+  {
+    AuthenticatedEnquiriesIdRoute: AuthenticatedEnquiriesIdRoute,
+  }
+
+const AuthenticatedEnquiriesRouteWithChildren =
+  AuthenticatedEnquiriesRoute._addFileChildren(
+    AuthenticatedEnquiriesRouteChildren,
+  )
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedEnquiriesRoute: typeof AuthenticatedEnquiriesRouteWithChildren
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedEnquiriesRoute: AuthenticatedEnquiriesRouteWithChildren,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  BuildBoxRoute: BuildBoxRoute,
+  CatalogueRoute: CatalogueRoute,
+  CombosRoute: CombosRoute,
+  EnquiryRoute: EnquiryRoute,
+  TrackRoute: TrackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
