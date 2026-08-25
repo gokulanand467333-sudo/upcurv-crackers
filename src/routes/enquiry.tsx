@@ -37,7 +37,26 @@ export const Route = createFileRoute("/enquiry")({
   component: EnquiryPage,
 });
 
-type Done = { ref: string; estimated: number; itemCount: number; name: string; city: string };
+type Done = {
+  ref: string;
+  estimated: number;
+  itemCount: number;
+  name: string;
+  city: string;
+  mobile: string;
+  lines: { name: string; code: string | null; qty: number; price: number }[];
+};
+
+function enquiryPdf(done: Done) {
+  downloadSummaryPdf({
+    title: "Enquiry Summary",
+    ref: done.ref,
+    customer: { name: done.name, mobile: done.mobile, city: done.city },
+    items: done.lines,
+    note: "Our team will contact you to confirm availability, pricing and fulfilment options.",
+    fileName: `Enquiry-${done.ref}.pdf`,
+  });
+}
 
 function EnquiryPage() {
   const { items, setQty, remove, total, count, clear, ready } = useCart();
