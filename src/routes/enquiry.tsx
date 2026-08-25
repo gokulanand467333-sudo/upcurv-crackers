@@ -97,8 +97,20 @@ function EnquiryPage() {
         },
       }),
     onSuccess: (res) => {
-      setDone({ ...res, name: form.name.trim(), city: form.city.trim() });
+      const record: Done = {
+        ...res,
+        name: form.name.trim(),
+        city: form.city.trim(),
+        mobile: form.mobile.trim(),
+        lines: items.map((i) => ({ name: i.name, code: i.code, qty: i.qty, price: i.price })),
+      };
+      setDone(record);
       clear();
+      try {
+        enquiryPdf(record);
+      } catch {
+        toast.error("Enquiry sent, but the PDF could not be generated.");
+      }
     },
     onError: () => toast.error("Could not send your enquiry. Please try again."),
   });
