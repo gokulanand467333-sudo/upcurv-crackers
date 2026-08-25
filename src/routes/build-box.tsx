@@ -161,6 +161,7 @@ function BuildBox() {
                     nameTa: product.name_ta,
                     price: Number(product.price),
                     categorySlug: null,
+                    imageUrl: product.image_url,
                   },
                   qty,
                 ),
