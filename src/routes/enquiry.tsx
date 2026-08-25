@@ -163,6 +163,9 @@ function EnquiryPage() {
                 <MessageCircle className="size-4" /> Chat with our team
               </a>
             </Button>
+            <Button variant="secondary" className="mt-2 w-full" onClick={() => enquiryPdf(done)}>
+              <Download className="size-4" /> Download enquiry PDF
+            </Button>
             <Button asChild variant="outline" className="mt-2 w-full">
               <Link to="/track" search={{ ref: done.ref }}>
                 Track this enquiry
