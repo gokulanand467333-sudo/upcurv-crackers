@@ -11,8 +11,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
+import { categoryImage } from "@/lib/catalog";
 import { readSource, useCart } from "@/lib/enquiry-cart";
 import { submitEnquiry } from "@/lib/enquiry.functions";
+import { downloadSummaryPdf } from "@/lib/enquiry-pdf";
 import { pick, useLang } from "@/lib/i18n";
 import { inr, SHOP } from "@/lib/shop";
 
