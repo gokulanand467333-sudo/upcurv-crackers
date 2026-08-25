@@ -119,6 +119,7 @@ export function ProductCard({
                   nameTa: product.name_ta,
                   price,
                   categorySlug,
+                  imageUrl: product.image_url,
                 });
                 setFlash(true);
                 setTimeout(() => setFlash(false), 1200);
