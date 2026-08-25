@@ -161,6 +161,14 @@ function EnquiryPage() {
           <div className="mt-5 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
             {items.map((i) => (
               <div key={i.productId} className="flex items-center gap-3 p-3">
+                <img
+                  src={i.imageUrl || categoryImage(i.categorySlug)}
+                  alt={i.name}
+                  loading="lazy"
+                  width={64}
+                  height={48}
+                  className="h-12 w-16 shrink-0 rounded-md border border-border object-cover"
+                />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">{pick(lang, i.name, i.nameTa)}</p>
                   <p className="text-xs text-muted-foreground">
