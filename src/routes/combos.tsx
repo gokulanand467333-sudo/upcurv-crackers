@@ -95,6 +95,7 @@ function Combos() {
                               nameTa: ci.products.name_ta,
                               price: Number(ci.products.price),
                               categorySlug: null,
+                              imageUrl: ci.products.image_url,
                             },
                             ci.qty,
                           );

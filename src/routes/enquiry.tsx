@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
-import { CheckCircle2, MessageCircle, Minus, Plus, Trash2 } from "lucide-react";
+import { CheckCircle2, Download, MessageCircle, Minus, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -11,8 +11,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
+import { categoryImage } from "@/lib/catalog";
 import { readSource, useCart } from "@/lib/enquiry-cart";
 import { submitEnquiry } from "@/lib/enquiry.functions";
+import { downloadSummaryPdf } from "@/lib/enquiry-pdf";
 import { pick, useLang } from "@/lib/i18n";
 import { inr, SHOP } from "@/lib/shop";
 
@@ -35,7 +37,26 @@ export const Route = createFileRoute("/enquiry")({
   component: EnquiryPage,
 });
 
-type Done = { ref: string; estimated: number; itemCount: number; name: string; city: string };
+type Done = {
+  ref: string;
+  estimated: number;
+  itemCount: number;
+  name: string;
+  city: string;
+  mobile: string;
+  lines: { name: string; code: string | null; qty: number; price: number }[];
+};
+
+function enquiryPdf(done: Done) {
+  downloadSummaryPdf({
+    title: "Enquiry Summary",
+    ref: done.ref,
+    customer: { name: done.name, mobile: done.mobile, city: done.city },
+    items: done.lines,
+    note: "Our team will contact you to confirm availability, pricing and fulfilment options.",
+    fileName: `Enquiry-${done.ref}.pdf`,
+  });
+}
 
 function EnquiryPage() {
   const { items, setQty, remove, total, count, clear, ready } = useCart();
@@ -76,8 +97,20 @@ function EnquiryPage() {
         },
       }),
     onSuccess: (res) => {
-      setDone({ ...res, name: form.name.trim(), city: form.city.trim() });
+      const record: Done = {
+        ...res,
+        name: form.name.trim(),
+        city: form.city.trim(),
+        mobile: form.mobile.trim(),
+        lines: items.map((i) => ({ name: i.name, code: i.code, qty: i.qty, price: i.price })),
+      };
+      setDone(record);
       clear();
+      try {
+        enquiryPdf(record);
+      } catch {
+        toast.error("Enquiry sent, but the PDF could not be generated.");
+      }
     },
     onError: () => toast.error("Could not send your enquiry. Please try again."),
   });
@@ -130,6 +163,9 @@ function EnquiryPage() {
                 <MessageCircle className="size-4" /> Chat with our team
               </a>
             </Button>
+            <Button variant="secondary" className="mt-2 w-full" onClick={() => enquiryPdf(done)}>
+              <Download className="size-4" /> Download enquiry PDF
+            </Button>
             <Button asChild variant="outline" className="mt-2 w-full">
               <Link to="/track" search={{ ref: done.ref }}>
                 Track this enquiry
@@ -161,6 +197,14 @@ function EnquiryPage() {
           <div className="mt-5 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
             {items.map((i) => (
               <div key={i.productId} className="flex items-center gap-3 p-3">
+                <img
+                  src={i.imageUrl || categoryImage(i.categorySlug)}
+                  alt={i.name}
+                  loading="lazy"
+                  width={64}
+                  height={48}
+                  className="h-12 w-16 shrink-0 rounded-md border border-border object-cover"
+                />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">{pick(lang, i.name, i.nameTa)}</p>
                   <p className="text-xs text-muted-foreground">
