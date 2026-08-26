@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Search } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { ProductCard, ProductCardSkeleton } from "@/components/product-card";
 import { SiteShell } from "@/components/site-shell";
@@ -38,10 +38,14 @@ export const Route = createFileRoute("/catalogue")({
 });
 
 function Catalogue() {
-  const { category, experience } = Route.useSearch();
+  const { category, experience, q: urlQ } = Route.useSearch();
   const navigate = Route.useNavigate();
   const { lang, t } = useLang();
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(urlQ ?? "");
+
+  useEffect(() => {
+    setQ(urlQ ?? "");
+  }, [urlQ]);
 
   const products = useQuery(productsQuery);
   const categories = useQuery(categoriesQuery);

@@ -243,18 +243,31 @@ function EnquiryPage() {
                 </Button>
               </div>
             ))}
-            <div className="flex items-center justify-between bg-secondary/40 p-4">
-              <span className="text-sm font-medium">
-                {t("estimated")} · {count} items
-              </span>
-              <span className="text-xl font-semibold">{inr(total)}</span>
-            </div>
           </div>
         )}
 
-        <p className="mt-3 text-xs font-medium text-muted-foreground">
-          Final availability, pricing and fulfilment will be confirmed by our team.
-        </p>
+        {items.length > 0 && (
+          <div className="mt-4 rounded-2xl border border-border bg-card p-5">
+            <h2 className="text-lg font-semibold">Enquiry Summary</h2>
+            <div className="mt-4 space-y-2 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Sub total ({count} items)</span>
+                <span className="font-medium">{inr(total)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Delivery / pickup</span>
+                <span className="font-medium">Confirmed by seller</span>
+              </div>
+            </div>
+            <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+              <span className="text-base font-semibold">{t("estimated")}</span>
+              <span className="text-xl font-bold">{inr(total)}</span>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Final availability, pricing and fulfilment will be confirmed by our team.
+            </p>
+          </div>
+        )}
 
         <form
           className="mt-8 space-y-5 rounded-2xl border border-border p-5"
