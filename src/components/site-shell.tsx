@@ -1,5 +1,16 @@
-import { Link } from "@tanstack/react-router";
-import { Menu, Phone, ShoppingBag, MessageCircle } from "lucide-react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import {
+  Gift,
+  Grid2x2,
+  Heart,
+  Home,
+  Menu,
+  MessageCircle,
+  Phone,
+  Search,
+  ShoppingCart,
+  Sparkles,
+} from "lucide-react";
 import { useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -13,6 +24,13 @@ const NAV = [
   { to: "/build-box", label: "Build My Box", labelTa: "என் பெட்டி" },
   { to: "/combos", label: "Combos", labelTa: "காம்போ" },
   { to: "/track", label: "Track", labelTa: "நிலை" },
+] as const;
+
+const TABS = [
+  { to: "/", label: "Home", labelTa: "முகப்பு", icon: Home },
+  { to: "/catalogue", label: "Catalogue", labelTa: "அட்டவணை", icon: Grid2x2 },
+  { to: "/combos", label: "Combos", labelTa: "காம்போ", icon: Gift },
+  { to: "/build-box", label: "My Box", labelTa: "என் பெட்டி", icon: Sparkles },
 ] as const;
 
 export function LegalNotice({ compact = false }: { compact?: boolean }) {
@@ -49,86 +67,136 @@ function LangToggle() {
   );
 }
 
+function CartButton({ count }: { count: number }) {
+  return (
+    <Link
+      to="/enquiry"
+      aria-label="My enquiry"
+      className="relative grid size-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground"
+    >
+      <ShoppingCart className="size-5" />
+      {count > 0 && (
+        <span className="absolute -right-0.5 -top-0.5 grid min-w-5 place-items-center rounded-full bg-foreground px-1 text-[10px] font-bold text-background">
+          {count}
+        </span>
+      )}
+    </Link>
+  );
+}
+
 export function SiteShell({ children }: { children: ReactNode }) {
   const { count } = useCart();
-  const { lang } = useLang();
+  const { lang, t } = useLang();
   const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const navigate = useNavigate();
   useSource();
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur">
-        <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-2 px-4">
-          <Sheet open={open} onOpenChange={setOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden" aria-label="Menu">
-                <Menu className="size-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-64 p-6">
-              <nav className="mt-8 flex flex-col gap-1">
+    <div className="flex min-h-screen flex-col bg-secondary/30">
+      <div className="bg-accent/70 px-4 py-2 text-center text-[11px] font-medium leading-snug text-accent-foreground">
+        Enquiry only · No online payment · Our team confirms availability ✨
+      </div>
+
+      <header className="sticky top-0 z-40 rounded-b-3xl bg-primary text-primary-foreground shadow-sm">
+        <div className="mx-auto w-full max-w-6xl px-4 pb-3 pt-3">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+            <div className="flex min-w-0 items-center gap-2">
+              <Sheet open={open} onOpenChange={setOpen}>
+                <SheetTrigger asChild>
+                  <button
+                    aria-label="Menu"
+                    className="grid size-9 shrink-0 place-items-center rounded-lg hover:bg-primary-foreground/10 md:hidden"
+                  >
+                    <Menu className="size-5" />
+                  </button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-64 p-6">
+                  <nav className="mt-8 flex flex-col gap-1">
+                    {NAV.map((n) => (
+                      <Link
+                        key={n.to}
+                        to={n.to}
+                        onClick={() => setOpen(false)}
+                        className="rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-accent"
+                      >
+                        {lang === "ta" ? n.labelTa : n.label}
+                      </Link>
+                    ))}
+                    <a
+                      href={`tel:${SHOP.phoneDial}`}
+                      className="rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-accent"
+                    >
+                      {SHOP.phone}
+                    </a>
+                  </nav>
+                </SheetContent>
+              </Sheet>
+
+              <Link to="/" className="flex min-w-0 items-center gap-2">
+                <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary-foreground text-base">
+                  🎇
+                </span>
+                <span className="truncate font-display text-base font-semibold tracking-tight">
+                  {SHOP.name}
+                </span>
+              </Link>
+
+              <nav className="ml-4 hidden items-center gap-1 md:flex">
                 {NAV.map((n) => (
                   <Link
                     key={n.to}
                     to={n.to}
-                    onClick={() => setOpen(false)}
-                    className="rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-accent"
+                    activeProps={{ className: "bg-primary-foreground/15" }}
+                    className="rounded-lg px-3 py-1.5 text-sm font-medium text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground"
                   >
                     {lang === "ta" ? n.labelTa : n.label}
                   </Link>
                 ))}
-                <a
-                  href={`tel:${SHOP.phoneDial}`}
-                  className="rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-accent"
-                >
-                  {SHOP.phone}
-                </a>
               </nav>
-            </SheetContent>
-          </Sheet>
+            </div>
 
-          <Link to="/" className="flex items-center gap-2">
-            <span className="grid size-8 place-items-center rounded-lg bg-primary text-base text-primary-foreground">
-              🎇
-            </span>
-            <span className="font-display text-base font-semibold tracking-tight">
-              {SHOP.name}
-            </span>
-          </Link>
-
-          <nav className="ml-6 hidden items-center gap-1 md:flex">
-            {NAV.map((n) => (
+            <div className="flex shrink-0 items-center gap-2">
+              <LangToggle />
               <Link
-                key={n.to}
-                to={n.to}
-                activeProps={{ className: "bg-accent text-accent-foreground" }}
-                className="rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                to="/track"
+                aria-label="Track enquiry"
+                className="hidden size-9 place-items-center rounded-full hover:bg-primary-foreground/10 sm:grid"
               >
-                {lang === "ta" ? n.labelTa : n.label}
+                <Heart className="size-5" />
               </Link>
-            ))}
-          </nav>
-
-          <div className="ml-auto flex items-center gap-2">
-            <LangToggle />
-            <Button asChild size="sm" className="relative">
-              <Link to="/enquiry">
-                <ShoppingBag className="size-4" />
-                <span className="hidden sm:inline">Enquiry</span>
-                {count > 0 && (
-                  <span className="ml-1 rounded-full bg-primary-foreground px-1.5 text-xs font-semibold text-primary">
-                    {count}
-                  </span>
-                )}
-              </Link>
-            </Button>
+              <CartButton count={count} />
+            </div>
           </div>
+
+          <form
+            className="relative mt-3"
+            onSubmit={(e) => {
+              e.preventDefault();
+              navigate({ to: "/catalogue", search: q.trim() ? { q: q.trim() } : {} });
+            }}
+          >
+            <Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder={t("search")}
+              className="h-11 w-full rounded-full bg-background pl-11 pr-12 text-sm text-foreground outline-none ring-0 placeholder:text-muted-foreground"
+            />
+            <button
+              type="submit"
+              aria-label="Search"
+              className="absolute right-1.5 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-full bg-primary text-primary-foreground"
+            >
+              <Search className="size-4" />
+            </button>
+          </form>
         </div>
       </header>
 
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 pb-20 md:pb-0">{children}</main>
 
-      <footer className="mt-16 border-t border-border bg-secondary/50">
+      <footer className="mt-12 border-t border-border bg-background pb-20 md:pb-0">
         <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-3">
           <div>
             <h3 className="text-lg font-semibold">{SHOP.name}</h3>
@@ -164,6 +232,39 @@ export function SiteShell({ children }: { children: ReactNode }) {
           </div>
         </div>
       </footer>
+
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background pb-[env(safe-area-inset-bottom)] md:hidden">
+        <div className="grid grid-cols-5">
+          {TABS.map((tab) => (
+            <Link
+              key={tab.to}
+              to={tab.to}
+              search={tab.to === "/catalogue" || tab.to === "/build-box" ? {} : undefined}
+              activeOptions={{ exact: tab.to === "/" }}
+              activeProps={{ className: "text-primary" }}
+              className="flex flex-col items-center gap-1 py-2 text-[11px] font-medium text-muted-foreground"
+            >
+              <tab.icon className="size-5" />
+              {lang === "ta" ? tab.labelTa : tab.label}
+            </Link>
+          ))}
+          <Link
+            to="/enquiry"
+            activeProps={{ className: "text-primary" }}
+            className="flex flex-col items-center gap-1 py-2 text-[11px] font-medium text-muted-foreground"
+          >
+            <span className="relative">
+              <ShoppingCart className="size-5" />
+              {count > 0 && (
+                <span className="absolute -right-2 -top-1.5 grid min-w-4 place-items-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground">
+                  {count}
+                </span>
+              )}
+            </span>
+            Enquiry
+          </Link>
+        </div>
+      </nav>
     </div>
   );
 }
