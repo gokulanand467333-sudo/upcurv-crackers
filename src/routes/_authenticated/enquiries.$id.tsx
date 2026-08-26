@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, MessageCircle, Phone, Trash2 } from "lucide-react";
+import { ArrowLeft, FileCheck2, MessageCircle, Phone, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { PIPELINE, STATUS_LABEL, waLink, type EnquiryStatus } from "@/lib/admin";
 import type { TablesUpdate } from "@/integrations/supabase/types";
+import { downloadSummaryPdf } from "@/lib/enquiry-pdf";
 import { inr } from "@/lib/shop";
 
 export const Route = createFileRoute("/_authenticated/enquiries/$id")({
@@ -257,18 +258,69 @@ function EnquiryDetail() {
                 </p>
               )}
             </div>
-            <Button
-              variant="outline"
-              className="mt-4"
-              onClick={() =>
-                update.mutate({
-                  estimated_value: quotedValue,
-                  item_count: items.reduce((s, i) => s + i.qty, 0),
-                })
-              }
-            >
-              Save revised totals
-            </Button>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                onClick={() =>
+                  update.mutate({
+                    estimated_value: quotedValue,
+                    item_count: items.reduce((s, i) => s + i.qty, 0),
+                  })
+                }
+              >
+                Save revised totals
+              </Button>
+              <Button
+                onClick={() => {
+                  update.mutate(
+                    {
+                      status: "confirmed",
+                      estimated_value: quotedValue,
+                      item_count: items.reduce((s, i) => s + i.qty, 0),
+                    },
+                    {
+                      onSuccess: () => {
+                        addNote.mutate(
+                          `Converted to order on ${new Date().toLocaleString("en-IN")} · ${items.length} lines · ${inr(quotedValue)}`,
+                        );
+                        try {
+                          downloadSummaryPdf({
+                            title: "Order Confirmation",
+                            ref: e.ref,
+                            customer: { name: e.name, mobile: e.mobile, city: e.city },
+                            items: items.map((i) => ({
+                              name: i.product_name,
+                              code: i.product_code,
+                              qty: i.qty,
+                              price: Number(i.unit_price),
+                            })),
+                            note: "Order confirmed offline with the customer. Fulfilment as agreed with the seller.",
+                            fileName: `Order-${e.ref}.pdf`,
+                          });
+                        } catch {
+                          toast.error("Order saved, but the PDF could not be generated.");
+                        }
+                        toast.success("Enquiry converted to order.");
+                      },
+                    },
+                  );
+                }}
+              >
+                <FileCheck2 className="size-4" /> Convert to Order
+              </Button>
+              <Button asChild variant="secondary">
+                <a
+                  href={waLink(
+                    e.mobile,
+                    `Hi ${e.name}, your order ${e.ref} is confirmed.\n${items
+                      .map((i) => `${i.product_name} x${i.qty} — ${inr(i.qty * Number(i.unit_price))}`)
+                      .join("\n")}\nTotal: ${inr(quotedValue)}\nWe will contact you for pickup/handover.`,
+                  )}
+                >
+                  Send order confirmation
+                </a>
+              </Button>
+            </div>
           </div>
         </div>
 
