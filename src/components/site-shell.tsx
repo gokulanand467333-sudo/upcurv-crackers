@@ -239,7 +239,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
             <Link
               key={tab.to}
               to={tab.to}
-              search={tab.to === "/catalogue" || tab.to === "/build-box" ? {} : undefined}
+              search={{}}
               activeOptions={{ exact: tab.to === "/" }}
               activeProps={{ className: "text-primary" }}
               className="flex flex-col items-center gap-1 py-2 text-[11px] font-medium text-muted-foreground"
