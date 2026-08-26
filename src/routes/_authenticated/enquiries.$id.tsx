@@ -286,7 +286,7 @@ function EnquiryDetail() {
                         try {
                           downloadSummaryPdf({
                             title: "Order Confirmation",
-                            ref: e.ref,
+                            ref: e.ref ?? "",
                             customer: { name: e.name, mobile: e.mobile, city: e.city },
                             items: items.map((i) => ({
                               name: i.product_name,
