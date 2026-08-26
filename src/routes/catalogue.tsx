@@ -38,10 +38,14 @@ export const Route = createFileRoute("/catalogue")({
 });
 
 function Catalogue() {
-  const { category, experience } = Route.useSearch();
+  const { category, experience, q: urlQ } = Route.useSearch();
   const navigate = Route.useNavigate();
   const { lang, t } = useLang();
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(urlQ ?? "");
+
+  useEffect(() => {
+    setQ(urlQ ?? "");
+  }, [urlQ]);
 
   const products = useQuery(productsQuery);
   const categories = useQuery(categoriesQuery);
