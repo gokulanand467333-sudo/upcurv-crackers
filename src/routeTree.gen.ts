@@ -20,6 +20,8 @@ import { Route as TrackRouteImport } from './routes/track'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedEnquiriesRouteImport } from './routes/_authenticated/enquiries'
 import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticated/products'
+import { Route as CombosIndexRouteImport } from './routes/combos.index'
+import { Route as CombosSlugRouteImport } from './routes/combos.$slug'
 import { Route as AuthenticatedEnquiriesIdRouteImport } from './routes/_authenticated/enquiries.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -76,6 +78,16 @@ const AuthenticatedProductsRoute = AuthenticatedProductsRouteImport.update({
   path: '/products',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const CombosIndexRoute = CombosIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CombosRoute,
+} as any)
+const CombosSlugRoute = CombosSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => CombosRoute,
+} as any)
 const AuthenticatedEnquiriesIdRoute =
   AuthenticatedEnquiriesIdRouteImport.update({
     id: '/$id',
@@ -88,12 +100,14 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/build-box': typeof BuildBoxRoute
   '/catalogue': typeof CatalogueRoute
-  '/combos': typeof CombosRoute
+  '/combos': typeof CombosRouteWithChildren
   '/enquiry': typeof EnquiryRoute
   '/track': typeof TrackRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/enquiries': typeof AuthenticatedEnquiriesRouteWithChildren
   '/products': typeof AuthenticatedProductsRoute
+  '/combos/$slug': typeof CombosSlugRoute
+  '/combos/': typeof CombosIndexRoute
   '/enquiries/$id': typeof AuthenticatedEnquiriesIdRoute
 }
 export interface FileRoutesByTo {
@@ -101,12 +115,13 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/build-box': typeof BuildBoxRoute
   '/catalogue': typeof CatalogueRoute
-  '/combos': typeof CombosRoute
   '/enquiry': typeof EnquiryRoute
   '/track': typeof TrackRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/enquiries': typeof AuthenticatedEnquiriesRouteWithChildren
   '/products': typeof AuthenticatedProductsRoute
+  '/combos/$slug': typeof CombosSlugRoute
+  '/combos': typeof CombosIndexRoute
   '/enquiries/$id': typeof AuthenticatedEnquiriesIdRoute
 }
 export interface FileRoutesById {
@@ -116,12 +131,14 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/build-box': typeof BuildBoxRoute
   '/catalogue': typeof CatalogueRoute
-  '/combos': typeof CombosRoute
+  '/combos': typeof CombosRouteWithChildren
   '/enquiry': typeof EnquiryRoute
   '/track': typeof TrackRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/enquiries': typeof AuthenticatedEnquiriesRouteWithChildren
   '/_authenticated/products': typeof AuthenticatedProductsRoute
+  '/combos/$slug': typeof CombosSlugRoute
+  '/combos/': typeof CombosIndexRoute
   '/_authenticated/enquiries/$id': typeof AuthenticatedEnquiriesIdRoute
 }
 export interface FileRouteTypes {
@@ -137,6 +154,8 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/enquiries'
     | '/products'
+    | '/combos/$slug'
+    | '/combos/'
     | '/enquiries/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -144,12 +163,13 @@ export interface FileRouteTypes {
     | '/auth'
     | '/build-box'
     | '/catalogue'
-    | '/combos'
     | '/enquiry'
     | '/track'
     | '/dashboard'
     | '/enquiries'
     | '/products'
+    | '/combos/$slug'
+    | '/combos'
     | '/enquiries/$id'
   id:
     | '__root__'
@@ -164,6 +184,8 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/enquiries'
     | '/_authenticated/products'
+    | '/combos/$slug'
+    | '/combos/'
     | '/_authenticated/enquiries/$id'
   fileRoutesById: FileRoutesById
 }
@@ -173,7 +195,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   BuildBoxRoute: typeof BuildBoxRoute
   CatalogueRoute: typeof CatalogueRoute
-  CombosRoute: typeof CombosRoute
+  CombosRoute: typeof CombosRouteWithChildren
   EnquiryRoute: typeof EnquiryRoute
   TrackRoute: typeof TrackRoute
 }
@@ -257,6 +279,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProductsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/combos/': {
+      id: '/combos/'
+      path: '/'
+      fullPath: '/combos/'
+      preLoaderRoute: typeof CombosIndexRouteImport
+      parentRoute: typeof CombosRoute
+    }
+    '/combos/$slug': {
+      id: '/combos/$slug'
+      path: '/$slug'
+      fullPath: '/combos/$slug'
+      preLoaderRoute: typeof CombosSlugRouteImport
+      parentRoute: typeof CombosRoute
+    }
     '/_authenticated/enquiries/$id': {
       id: '/_authenticated/enquiries/$id'
       path: '/$id'
@@ -296,13 +332,26 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface CombosRouteChildren {
+  CombosSlugRoute: typeof CombosSlugRoute
+  CombosIndexRoute: typeof CombosIndexRoute
+}
+
+const CombosRouteChildren: CombosRouteChildren = {
+  CombosSlugRoute: CombosSlugRoute,
+  CombosIndexRoute: CombosIndexRoute,
+}
+
+const CombosRouteWithChildren =
+  CombosRoute._addFileChildren(CombosRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   BuildBoxRoute: BuildBoxRoute,
   CatalogueRoute: CatalogueRoute,
-  CombosRoute: CombosRoute,
+  CombosRoute: CombosRouteWithChildren,
   EnquiryRoute: EnquiryRoute,
   TrackRoute: TrackRoute,
 }

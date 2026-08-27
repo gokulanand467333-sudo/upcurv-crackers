@@ -118,6 +118,7 @@ export function ProductCard({
                   name: product.name,
                   nameTa: product.name_ta,
                   price,
+                  mrp,
                   categorySlug,
                   imageUrl: product.image_url,
                 });
