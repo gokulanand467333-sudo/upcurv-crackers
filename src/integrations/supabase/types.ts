@@ -20,6 +20,7 @@ export type Database = {
           emoji: string | null
           experience: string | null
           id: string
+          image_url: string | null
           name: string
           name_ta: string | null
           slug: string
@@ -30,6 +31,7 @@ export type Database = {
           emoji?: string | null
           experience?: string | null
           id?: string
+          image_url?: string | null
           name: string
           name_ta?: string | null
           slug: string
@@ -40,6 +42,7 @@ export type Database = {
           emoji?: string | null
           experience?: string | null
           id?: string
+          image_url?: string | null
           name?: string
           name_ta?: string | null
           slug?: string
@@ -121,6 +124,7 @@ export type Database = {
       }
       enquiries: {
         Row: {
+          address: string | null
           city: string
           contact_method: string | null
           created_at: string
@@ -133,12 +137,14 @@ export type Database = {
           message: string | null
           mobile: string
           name: string
+          pincode: string | null
           ref: string | null
           source: string
           status: Database["public"]["Enums"]["enquiry_status"]
           updated_at: string
         }
         Insert: {
+          address?: string | null
           city: string
           contact_method?: string | null
           created_at?: string
@@ -151,12 +157,14 @@ export type Database = {
           message?: string | null
           mobile: string
           name: string
+          pincode?: string | null
           ref?: string | null
           source?: string
           status?: Database["public"]["Enums"]["enquiry_status"]
           updated_at?: string
         }
         Update: {
+          address?: string | null
           city?: string
           contact_method?: string | null
           created_at?: string
@@ -169,6 +177,7 @@ export type Database = {
           message?: string | null
           mobile?: string
           name?: string
+          pincode?: string | null
           ref?: string | null
           source?: string
           status?: Database["public"]["Enums"]["enquiry_status"]
