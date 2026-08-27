@@ -6,6 +6,7 @@ export type CartItem = {
   name: string;
   nameTa: string | null;
   price: number;
+  mrp?: number | null;
   qty: number;
   categorySlug: string | null;
   imageUrl?: string | null;

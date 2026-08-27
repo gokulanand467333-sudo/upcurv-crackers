@@ -160,6 +160,7 @@ function BuildBox() {
                     name: product.name,
                     nameTa: product.name_ta,
                     price: Number(product.price),
+                    mrp: product.mrp == null ? null : Number(product.mrp),
                     categorySlug: null,
                     imageUrl: product.image_url,
                   },

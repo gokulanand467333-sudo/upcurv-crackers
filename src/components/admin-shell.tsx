@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, ListChecks, LogOut, Package } from "lucide-react";
+import { Gift, LayoutDashboard, ListChecks, LogOut, Package, Tags } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,8 @@ const LINKS = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/enquiries", label: "Enquiries", icon: ListChecks },
   { to: "/products", label: "Products", icon: Package },
+  { to: "/categories", label: "Categories", icon: Tags },
+  { to: "/manage-combos", label: "Combos", icon: Gift },
 ] as const;
 
 export function AdminShell({ children }: { children: ReactNode }) {
