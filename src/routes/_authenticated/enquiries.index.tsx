@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { PIPELINE, waLink, type Enquiry } from "@/lib/admin";
 import { inr } from "@/lib/shop";
 
-export const Route = createFileRoute("/_authenticated/enquiries")({
+export const Route = createFileRoute("/_authenticated/enquiries/")({
   head: () => ({
     meta: [
       { title: "Enquiry Pipeline — Upcurv Crackers" },
