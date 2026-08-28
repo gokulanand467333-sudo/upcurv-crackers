@@ -17,6 +17,7 @@ import { Route as CatalogueRouteImport } from './routes/catalogue'
 import { Route as CombosRouteImport } from './routes/combos'
 import { Route as EnquiryRouteImport } from './routes/enquiry'
 import { Route as TrackRouteImport } from './routes/track'
+import { Route as AuthenticatedCategoriesRouteImport } from './routes/_authenticated/categories'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticated/products'
 import { Route as CombosIndexRouteImport } from './routes/combos.index'
@@ -63,6 +64,11 @@ const TrackRoute = TrackRouteImport.update({
   path: '/track',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedCategoriesRoute = AuthenticatedCategoriesRouteImport.update({
+  id: '/categories',
+  path: '/categories',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -104,6 +110,7 @@ export interface FileRoutesByFullPath {
   '/combos': typeof CombosRouteWithChildren
   '/enquiry': typeof EnquiryRoute
   '/track': typeof TrackRoute
+  '/categories': typeof AuthenticatedCategoriesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/products': typeof AuthenticatedProductsRoute
   '/combos/$slug': typeof CombosSlugRoute
@@ -118,6 +125,7 @@ export interface FileRoutesByTo {
   '/catalogue': typeof CatalogueRoute
   '/enquiry': typeof EnquiryRoute
   '/track': typeof TrackRoute
+  '/categories': typeof AuthenticatedCategoriesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/products': typeof AuthenticatedProductsRoute
   '/combos/$slug': typeof CombosSlugRoute
@@ -135,6 +143,7 @@ export interface FileRoutesById {
   '/combos': typeof CombosRouteWithChildren
   '/enquiry': typeof EnquiryRoute
   '/track': typeof TrackRoute
+  '/_authenticated/categories': typeof AuthenticatedCategoriesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/products': typeof AuthenticatedProductsRoute
   '/combos/$slug': typeof CombosSlugRoute
@@ -152,6 +161,7 @@ export interface FileRouteTypes {
     | '/combos'
     | '/enquiry'
     | '/track'
+    | '/categories'
     | '/dashboard'
     | '/products'
     | '/combos/$slug'
@@ -166,6 +176,7 @@ export interface FileRouteTypes {
     | '/catalogue'
     | '/enquiry'
     | '/track'
+    | '/categories'
     | '/dashboard'
     | '/products'
     | '/combos/$slug'
@@ -182,6 +193,7 @@ export interface FileRouteTypes {
     | '/combos'
     | '/enquiry'
     | '/track'
+    | '/_authenticated/categories'
     | '/_authenticated/dashboard'
     | '/_authenticated/products'
     | '/combos/$slug'
@@ -259,6 +271,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TrackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/categories': {
+      id: '/_authenticated/categories'
+      path: '/categories'
+      fullPath: '/categories'
+      preLoaderRoute: typeof AuthenticatedCategoriesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -305,6 +324,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedCategoriesRoute: typeof AuthenticatedCategoriesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedProductsRoute: typeof AuthenticatedProductsRoute
   AuthenticatedEnquiriesIdRoute: typeof AuthenticatedEnquiriesIdRoute
@@ -312,6 +332,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedCategoriesRoute: AuthenticatedCategoriesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedProductsRoute: AuthenticatedProductsRoute,
   AuthenticatedEnquiriesIdRoute: AuthenticatedEnquiriesIdRoute,
