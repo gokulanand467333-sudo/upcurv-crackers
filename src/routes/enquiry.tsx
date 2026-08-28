@@ -7,9 +7,9 @@ import { toast } from "sonner";
 
 import { LegalNotice, SiteShell } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { categoryImage } from "@/lib/catalog";
 import { readSource, useCart } from "@/lib/enquiry-cart";
@@ -25,7 +25,7 @@ export const Route = createFileRoute("/enquiry")({
       {
         name: "description",
         content:
-          "Review your selected crackers and send an enquiry. Our team confirms availability, pricing and fulfilment by phone or WhatsApp.",
+          "Review your selected crackers, see savings on every item and send an enquiry. Our team confirms availability, pricing and fulfilment by phone or WhatsApp.",
       },
       { property: "og:title", content: "My Diwali Enquiry — Upcurv Crackers" },
       {
@@ -64,16 +64,19 @@ function EnquiryPage() {
   const navigate = useNavigate();
   const submit = useServerFn(submitEnquiry);
   const [done, setDone] = useState<Done | null>(null);
+  const [open, setOpen] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
     mobile: "",
     city: "",
-    fulfilment: "contact",
-    contactMethod: "call",
+    address: "",
+    pincode: "",
     message: "",
-    freeText: "",
   });
+
+  const mrpTotal = items.reduce((s, i) => s + i.qty * (i.mrp && i.mrp > i.price ? i.mrp : i.price), 0);
+  const saved = Math.max(0, mrpTotal - total);
 
   const mutation = useMutation({
     mutationFn: async () =>
@@ -82,10 +85,12 @@ function EnquiryPage() {
           name: form.name.trim(),
           mobile: form.mobile.trim(),
           city: form.city.trim(),
-          fulfilment: form.fulfilment,
-          contactMethod: form.contactMethod,
+          address: form.address.trim() || null,
+          pincode: form.pincode.trim() || null,
+          fulfilment: "contact",
+          contactMethod: "call",
           message: form.message.trim() || null,
-          freeText: form.freeText.trim() || null,
+          freeText: null,
           source: readSource(),
           items: items.map((i) => ({
             productId: i.productId,
@@ -104,6 +109,7 @@ function EnquiryPage() {
         mobile: form.mobile.trim(),
         lines: items.map((i) => ({ name: i.name, code: i.code, qty: i.qty, price: i.price })),
       };
+      setOpen(false);
       setDone(record);
       clear();
       try {
@@ -183,7 +189,7 @@ function EnquiryPage() {
 
   return (
     <SiteShell>
-      <div className="mx-auto w-full max-w-3xl px-4 py-6">
+      <div className="mx-auto w-full max-w-3xl px-4 py-6 pb-32">
         <h1 className="text-3xl font-semibold">{t("myEnquiry")}</h1>
 
         {ready && items.length === 0 ? (
@@ -195,97 +201,153 @@ function EnquiryPage() {
           </div>
         ) : (
           <div className="mt-5 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
-            {items.map((i) => (
-              <div key={i.productId} className="flex items-center gap-3 p-3">
-                <img
-                  src={i.imageUrl || categoryImage(i.categorySlug)}
-                  alt={i.name}
-                  loading="lazy"
-                  width={64}
-                  height={48}
-                  className="h-12 w-16 shrink-0 rounded-md border border-border object-cover"
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{pick(lang, i.name, i.nameTa)}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {i.code} · {inr(i.price)}
-                  </p>
+            {items.map((i) => {
+              const hasMrp = i.mrp != null && i.mrp > i.price;
+              const lineSaved = hasMrp ? (i.mrp! - i.price) * i.qty : 0;
+              return (
+                <div key={i.productId} className="flex items-start gap-3 p-3">
+                  <img
+                    src={i.imageUrl || categoryImage(i.categorySlug)}
+                    alt={i.name}
+                    loading="lazy"
+                    width={64}
+                    height={48}
+                    className="h-12 w-16 shrink-0 rounded-md border border-border object-cover"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium leading-snug">{pick(lang, i.name, i.nameTa)}</p>
+                    <p className="text-xs text-muted-foreground">{i.code}</p>
+                    <div className="mt-1 flex flex-wrap items-baseline gap-2">
+                      <span className="text-sm font-semibold">{inr(i.price * i.qty)}</span>
+                      {hasMrp && (
+                        <>
+                          <span className="text-xs text-muted-foreground line-through">
+                            {inr(i.mrp! * i.qty)}
+                          </span>
+                          <span className="text-[11px] font-semibold text-emerald-600">
+                            Save {inr(lineSaved)}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 flex-col items-end gap-1">
+                    <div className="flex items-center gap-1 rounded-lg border border-border p-0.5">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-7"
+                        onClick={() => setQty(i.productId, i.qty - 1)}
+                      >
+                        <Minus className="size-3.5" />
+                      </Button>
+                      <span className="w-6 text-center text-sm font-semibold">{i.qty}</span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-7"
+                        onClick={() => setQty(i.productId, i.qty + 1)}
+                      >
+                        <Plus className="size-3.5" />
+                      </Button>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 px-1 text-xs text-muted-foreground"
+                      onClick={() => remove(i.productId)}
+                    >
+                      <Trash2 className="size-3.5" /> Remove
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1 rounded-lg border border-border p-0.5">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-7"
-                    onClick={() => setQty(i.productId, i.qty - 1)}
-                  >
-                    <Minus className="size-3.5" />
-                  </Button>
-                  <span className="w-6 text-center text-sm font-semibold">{i.qty}</span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-7"
-                    onClick={() => setQty(i.productId, i.qty + 1)}
-                  >
-                    <Plus className="size-3.5" />
-                  </Button>
-                </div>
-                <span className="w-20 text-right text-sm font-semibold">
-                  {inr(i.price * i.qty)}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="size-7 text-muted-foreground"
-                  onClick={() => remove(i.productId)}
-                >
-                  <Trash2 className="size-4" />
-                </Button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
         {items.length > 0 && (
-          <div className="mt-4 rounded-2xl border border-border bg-card p-5">
-            <h2 className="text-lg font-semibold">Enquiry Summary</h2>
-            <div className="mt-4 space-y-2 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Sub total ({count} items)</span>
-                <span className="font-medium">{inr(total)}</span>
+          <>
+            <div className="mt-4 rounded-2xl border border-border bg-card p-5">
+              <h2 className="text-lg font-semibold">Bill details</h2>
+              <div className="mt-4 space-y-2 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Catalogue value ({count} items)</span>
+                  <span className="font-medium">{inr(mrpTotal)}</span>
+                </div>
+                {saved > 0 && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Discount</span>
+                    <span className="font-medium text-emerald-600">− {inr(saved)}</span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Delivery / pickup</span>
+                  <span className="font-medium">Confirmed by seller</span>
+                </div>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Delivery / pickup</span>
-                <span className="font-medium">Confirmed by seller</span>
+              <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+                <span className="text-base font-semibold">{t("estimated")}</span>
+                <div className="text-right">
+                  {saved > 0 && (
+                    <span className="mr-2 text-sm text-muted-foreground line-through">
+                      {inr(mrpTotal)}
+                    </span>
+                  )}
+                  <span className="text-xl font-bold">{inr(total)}</span>
+                </div>
+              </div>
+              {saved > 0 && (
+                <p className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700">
+                  🎉 You save {inr(saved)} on this enquiry
+                </p>
+              )}
+              <p className="mt-2 text-xs text-muted-foreground">
+                Final availability, pricing and fulfilment will be confirmed by our team.
+              </p>
+            </div>
+
+            <div className="mt-5">
+              <LegalNotice compact />
+            </div>
+
+            <div className="fixed inset-x-0 bottom-16 z-30 border-t border-border bg-background/95 p-3 backdrop-blur md:bottom-0">
+              <div className="mx-auto flex w-full max-w-3xl items-center gap-3">
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground">{count} items</p>
+                  <p className="text-lg font-bold leading-none">{inr(total)}</p>
+                </div>
+                <Button size="lg" className="ml-auto flex-1" onClick={() => setOpen(true)}>
+                  {t("sendEnquiry")}
+                </Button>
               </div>
             </div>
-            <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
-              <span className="text-base font-semibold">{t("estimated")}</span>
-              <span className="text-xl font-bold">{inr(total)}</span>
-            </div>
-            <p className="mt-2 text-xs text-muted-foreground">
-              Final availability, pricing and fulfilment will be confirmed by our team.
-            </p>
-          </div>
+          </>
         )}
+      </div>
 
-        <form
-          className="mt-8 space-y-5 rounded-2xl border border-border p-5"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (!form.name.trim() || form.mobile.trim().length < 8 || !form.city.trim()) {
-              toast.error("Please fill name, mobile number and city.");
-              return;
-            }
-            mutation.mutate();
-          }}
-        >
-          <div>
-            <h2 className="text-lg font-semibold">Tell us about your requirement</h2>
-            <p className="text-xs text-muted-foreground">No account needed.</p>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-md rounded-3xl p-5 sm:rounded-3xl">
+          <DialogHeader>
+            <DialogTitle>Your details</DialogTitle>
+          </DialogHeader>
+          <form
+            className="space-y-3"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (
+                !form.name.trim() ||
+                form.mobile.trim().length < 8 ||
+                !form.city.trim() ||
+                !form.address.trim() ||
+                form.pincode.trim().length < 4
+              ) {
+                toast.error("Please fill name, mobile, city, address and pincode.");
+                return;
+              }
+              mutation.mutate();
+            }}
+          >
             <div className="space-y-1.5">
               <Label htmlFor="name">Name*</Label>
               <Input
@@ -305,81 +367,55 @@ function EnquiryPage() {
                 required
               />
             </div>
-            <div className="space-y-1.5 sm:col-span-2">
-              <Label htmlFor="city">City / Area*</Label>
-              <Input
-                id="city"
-                value={form.city}
-                onChange={(e) => setForm({ ...form, city: e.target.value })}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="city">City / Area*</Label>
+                <Input
+                  id="city"
+                  value={form.city}
+                  onChange={(e) => setForm({ ...form, city: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="pincode">Pincode*</Label>
+                <Input
+                  id="pincode"
+                  inputMode="numeric"
+                  value={form.pincode}
+                  onChange={(e) => setForm({ ...form, pincode: e.target.value })}
+                  required
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="address">Address*</Label>
+              <Textarea
+                id="address"
+                rows={2}
+                value={form.address}
+                onChange={(e) => setForm({ ...form, address: e.target.value })}
                 required
               />
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>How would you like to proceed?</Label>
-            <RadioGroup
-              value={form.fulfilment}
-              onValueChange={(v) => setForm({ ...form, fulfilment: v })}
-              className="gap-2"
-            >
-              {SHOP.fulfilment.map((f) => (
-                <label
-                  key={f.value}
-                  className="flex items-center gap-3 rounded-xl border border-border p-3 text-sm"
-                >
-                  <RadioGroupItem value={f.value} /> {f.label}
-                </label>
-              ))}
-            </RadioGroup>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Preferred contact method</Label>
-            <RadioGroup
-              value={form.contactMethod}
-              onValueChange={(v) => setForm({ ...form, contactMethod: v })}
-              className="flex gap-2"
-            >
-              {SHOP.contactMethods.map((c) => (
-                <label
-                  key={c.value}
-                  className="flex flex-1 items-center gap-2 rounded-xl border border-border p-3 text-sm"
-                >
-                  <RadioGroupItem value={c.value} /> {c.label}
-                </label>
-              ))}
-            </RadioGroup>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="message">Optional message</Label>
-            <Textarea
-              id="message"
-              rows={2}
-              value={form.message}
-              onChange={(e) => setForm({ ...form, message: e.target.value })}
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="freeText">Quick enquiry (type what you need)</Label>
-            <Textarea
-              id="freeText"
-              rows={3}
-              placeholder="Need 10 boxes sparklers, 5 flower pots and family combo around 3000."
-              value={form.freeText}
-              onChange={(e) => setForm({ ...form, freeText: e.target.value })}
-            />
-          </div>
-
-          <LegalNotice compact />
-
-          <Button type="submit" size="lg" className="w-full" disabled={mutation.isPending}>
-            {mutation.isPending ? "Sending…" : t("sendEnquiry")}
-          </Button>
-        </form>
-      </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="message">Optional note</Label>
+              <Textarea
+                id="message"
+                rows={2}
+                value={form.message}
+                onChange={(e) => setForm({ ...form, message: e.target.value })}
+              />
+            </div>
+            <Button type="submit" size="lg" className="w-full" disabled={mutation.isPending}>
+              {mutation.isPending ? "Sending…" : t("sendEnquiry")}
+            </Button>
+            <p className="text-center text-[11px] text-muted-foreground">
+              Enquiry only · no online payment
+            </p>
+          </form>
+        </DialogContent>
+      </Dialog>
     </SiteShell>
   );
 }

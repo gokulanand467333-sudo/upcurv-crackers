@@ -18,10 +18,10 @@ import { Route as CombosRouteImport } from './routes/combos'
 import { Route as EnquiryRouteImport } from './routes/enquiry'
 import { Route as TrackRouteImport } from './routes/track'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedEnquiriesRouteImport } from './routes/_authenticated/enquiries'
 import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticated/products'
 import { Route as CombosIndexRouteImport } from './routes/combos.index'
 import { Route as CombosSlugRouteImport } from './routes/combos.$slug'
+import { Route as AuthenticatedEnquiriesIndexRouteImport } from './routes/_authenticated/enquiries.index'
 import { Route as AuthenticatedEnquiriesIdRouteImport } from './routes/_authenticated/enquiries.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -68,11 +68,6 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedEnquiriesRoute = AuthenticatedEnquiriesRouteImport.update({
-  id: '/enquiries',
-  path: '/enquiries',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedProductsRoute = AuthenticatedProductsRouteImport.update({
   id: '/products',
   path: '/products',
@@ -88,11 +83,17 @@ const CombosSlugRoute = CombosSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => CombosRoute,
 } as any)
+const AuthenticatedEnquiriesIndexRoute =
+  AuthenticatedEnquiriesIndexRouteImport.update({
+    id: '/enquiries/',
+    path: '/enquiries/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedEnquiriesIdRoute =
   AuthenticatedEnquiriesIdRouteImport.update({
-    id: '/$id',
-    path: '/$id',
-    getParentRoute: () => AuthenticatedEnquiriesRoute,
+    id: '/enquiries/$id',
+    path: '/enquiries/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -104,11 +105,11 @@ export interface FileRoutesByFullPath {
   '/enquiry': typeof EnquiryRoute
   '/track': typeof TrackRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/enquiries': typeof AuthenticatedEnquiriesRouteWithChildren
   '/products': typeof AuthenticatedProductsRoute
   '/combos/$slug': typeof CombosSlugRoute
   '/combos/': typeof CombosIndexRoute
   '/enquiries/$id': typeof AuthenticatedEnquiriesIdRoute
+  '/enquiries/': typeof AuthenticatedEnquiriesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -118,11 +119,11 @@ export interface FileRoutesByTo {
   '/enquiry': typeof EnquiryRoute
   '/track': typeof TrackRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/enquiries': typeof AuthenticatedEnquiriesRouteWithChildren
   '/products': typeof AuthenticatedProductsRoute
   '/combos/$slug': typeof CombosSlugRoute
   '/combos': typeof CombosIndexRoute
   '/enquiries/$id': typeof AuthenticatedEnquiriesIdRoute
+  '/enquiries': typeof AuthenticatedEnquiriesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -135,11 +136,11 @@ export interface FileRoutesById {
   '/enquiry': typeof EnquiryRoute
   '/track': typeof TrackRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/enquiries': typeof AuthenticatedEnquiriesRouteWithChildren
   '/_authenticated/products': typeof AuthenticatedProductsRoute
   '/combos/$slug': typeof CombosSlugRoute
   '/combos/': typeof CombosIndexRoute
   '/_authenticated/enquiries/$id': typeof AuthenticatedEnquiriesIdRoute
+  '/_authenticated/enquiries/': typeof AuthenticatedEnquiriesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -152,11 +153,11 @@ export interface FileRouteTypes {
     | '/enquiry'
     | '/track'
     | '/dashboard'
-    | '/enquiries'
     | '/products'
     | '/combos/$slug'
     | '/combos/'
     | '/enquiries/$id'
+    | '/enquiries/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -166,11 +167,11 @@ export interface FileRouteTypes {
     | '/enquiry'
     | '/track'
     | '/dashboard'
-    | '/enquiries'
     | '/products'
     | '/combos/$slug'
     | '/combos'
     | '/enquiries/$id'
+    | '/enquiries'
   id:
     | '__root__'
     | '/'
@@ -182,11 +183,11 @@ export interface FileRouteTypes {
     | '/enquiry'
     | '/track'
     | '/_authenticated/dashboard'
-    | '/_authenticated/enquiries'
     | '/_authenticated/products'
     | '/combos/$slug'
     | '/combos/'
     | '/_authenticated/enquiries/$id'
+    | '/_authenticated/enquiries/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -265,13 +266,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/enquiries': {
-      id: '/_authenticated/enquiries'
-      path: '/enquiries'
-      fullPath: '/enquiries'
-      preLoaderRoute: typeof AuthenticatedEnquiriesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/products': {
       id: '/_authenticated/products'
       path: '/products'
@@ -293,40 +287,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CombosSlugRouteImport
       parentRoute: typeof CombosRoute
     }
+    '/_authenticated/enquiries/': {
+      id: '/_authenticated/enquiries/'
+      path: '/enquiries'
+      fullPath: '/enquiries/'
+      preLoaderRoute: typeof AuthenticatedEnquiriesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/enquiries/$id': {
       id: '/_authenticated/enquiries/$id'
-      path: '/$id'
+      path: '/enquiries/$id'
       fullPath: '/enquiries/$id'
       preLoaderRoute: typeof AuthenticatedEnquiriesIdRouteImport
-      parentRoute: typeof AuthenticatedEnquiriesRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
 
-interface AuthenticatedEnquiriesRouteChildren {
-  AuthenticatedEnquiriesIdRoute: typeof AuthenticatedEnquiriesIdRoute
-}
-
-const AuthenticatedEnquiriesRouteChildren: AuthenticatedEnquiriesRouteChildren =
-  {
-    AuthenticatedEnquiriesIdRoute: AuthenticatedEnquiriesIdRoute,
-  }
-
-const AuthenticatedEnquiriesRouteWithChildren =
-  AuthenticatedEnquiriesRoute._addFileChildren(
-    AuthenticatedEnquiriesRouteChildren,
-  )
-
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedEnquiriesRoute: typeof AuthenticatedEnquiriesRouteWithChildren
   AuthenticatedProductsRoute: typeof AuthenticatedProductsRoute
+  AuthenticatedEnquiriesIdRoute: typeof AuthenticatedEnquiriesIdRoute
+  AuthenticatedEnquiriesIndexRoute: typeof AuthenticatedEnquiriesIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedEnquiriesRoute: AuthenticatedEnquiriesRouteWithChildren,
   AuthenticatedProductsRoute: AuthenticatedProductsRoute,
+  AuthenticatedEnquiriesIdRoute: AuthenticatedEnquiriesIdRoute,
+  AuthenticatedEnquiriesIndexRoute: AuthenticatedEnquiriesIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
