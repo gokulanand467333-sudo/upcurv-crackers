@@ -19,6 +19,7 @@ import { Route as EnquiryRouteImport } from './routes/enquiry'
 import { Route as TrackRouteImport } from './routes/track'
 import { Route as AuthenticatedCategoriesRouteImport } from './routes/_authenticated/categories'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedManageCombosRouteImport } from './routes/_authenticated/manage-combos'
 import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticated/products'
 import { Route as CombosIndexRouteImport } from './routes/combos.index'
 import { Route as CombosSlugRouteImport } from './routes/combos.$slug'
@@ -74,6 +75,12 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedManageCombosRoute =
+  AuthenticatedManageCombosRouteImport.update({
+    id: '/manage-combos',
+    path: '/manage-combos',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedProductsRoute = AuthenticatedProductsRouteImport.update({
   id: '/products',
   path: '/products',
@@ -112,6 +119,7 @@ export interface FileRoutesByFullPath {
   '/track': typeof TrackRoute
   '/categories': typeof AuthenticatedCategoriesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/manage-combos': typeof AuthenticatedManageCombosRoute
   '/products': typeof AuthenticatedProductsRoute
   '/combos/$slug': typeof CombosSlugRoute
   '/combos/': typeof CombosIndexRoute
@@ -127,6 +135,7 @@ export interface FileRoutesByTo {
   '/track': typeof TrackRoute
   '/categories': typeof AuthenticatedCategoriesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/manage-combos': typeof AuthenticatedManageCombosRoute
   '/products': typeof AuthenticatedProductsRoute
   '/combos/$slug': typeof CombosSlugRoute
   '/combos': typeof CombosIndexRoute
@@ -145,6 +154,7 @@ export interface FileRoutesById {
   '/track': typeof TrackRoute
   '/_authenticated/categories': typeof AuthenticatedCategoriesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/manage-combos': typeof AuthenticatedManageCombosRoute
   '/_authenticated/products': typeof AuthenticatedProductsRoute
   '/combos/$slug': typeof CombosSlugRoute
   '/combos/': typeof CombosIndexRoute
@@ -163,6 +173,7 @@ export interface FileRouteTypes {
     | '/track'
     | '/categories'
     | '/dashboard'
+    | '/manage-combos'
     | '/products'
     | '/combos/$slug'
     | '/combos/'
@@ -178,6 +189,7 @@ export interface FileRouteTypes {
     | '/track'
     | '/categories'
     | '/dashboard'
+    | '/manage-combos'
     | '/products'
     | '/combos/$slug'
     | '/combos'
@@ -195,6 +207,7 @@ export interface FileRouteTypes {
     | '/track'
     | '/_authenticated/categories'
     | '/_authenticated/dashboard'
+    | '/_authenticated/manage-combos'
     | '/_authenticated/products'
     | '/combos/$slug'
     | '/combos/'
@@ -285,6 +298,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/manage-combos': {
+      id: '/_authenticated/manage-combos'
+      path: '/manage-combos'
+      fullPath: '/manage-combos'
+      preLoaderRoute: typeof AuthenticatedManageCombosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/products': {
       id: '/_authenticated/products'
       path: '/products'
@@ -326,6 +346,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedCategoriesRoute: typeof AuthenticatedCategoriesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedManageCombosRoute: typeof AuthenticatedManageCombosRoute
   AuthenticatedProductsRoute: typeof AuthenticatedProductsRoute
   AuthenticatedEnquiriesIdRoute: typeof AuthenticatedEnquiriesIdRoute
   AuthenticatedEnquiriesIndexRoute: typeof AuthenticatedEnquiriesIndexRoute
@@ -334,6 +355,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCategoriesRoute: AuthenticatedCategoriesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedManageCombosRoute: AuthenticatedManageCombosRoute,
   AuthenticatedProductsRoute: AuthenticatedProductsRoute,
   AuthenticatedEnquiriesIdRoute: AuthenticatedEnquiriesIdRoute,
   AuthenticatedEnquiriesIndexRoute: AuthenticatedEnquiriesIndexRoute,
