@@ -21,6 +21,7 @@ const submitSchema = z.object({
   freeText: z.string().max(2000).optional().nullable(),
   source: z.string().max(40).default("direct"),
   items: z.array(itemSchema).max(200).default([]),
+  couponCode: z.string().max(40).optional().nullable(),
 });
 
 export const submitEnquiry = createServerFn({ method: "POST" })
@@ -28,7 +29,30 @@ export const submitEnquiry = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const estimated = data.items.reduce((s, i) => s + i.qty * i.price, 0);
+    const subtotal = data.items.reduce((s, i) => s + i.qty * i.price, 0);
+
+    let discount = 0;
+    let couponCode: string | null = null;
+    if (data.couponCode) {
+      const { couponDiscount } = await import("@/lib/coupon-math");
+      const { data: coupon } = await supabaseAdmin
+        .from("coupons")
+        .select("*")
+        .eq("code", data.couponCode.trim().toUpperCase())
+        .maybeSingle();
+      if (coupon) {
+        const result = couponDiscount(coupon, subtotal);
+        if (result.ok) {
+          discount = result.discount;
+          couponCode = coupon.code;
+          await supabaseAdmin
+            .from("coupons")
+            .update({ used_count: coupon.used_count + 1 })
+            .eq("id", coupon.id);
+        }
+      }
+    }
+    const estimated = Math.max(0, subtotal - discount);
     const { data: enquiry, error } = await supabaseAdmin
       .from("enquiries")
       .insert({
@@ -43,6 +67,8 @@ export const submitEnquiry = createServerFn({ method: "POST" })
         free_text: data.freeText ?? null,
         source: data.source,
         estimated_value: estimated,
+        coupon_code: couponCode,
+        discount_amount: discount,
         item_count: data.items.reduce((s, i) => s + i.qty, 0),
       })
       .select("id, ref, estimated_value, item_count")
@@ -67,6 +93,8 @@ export const submitEnquiry = createServerFn({ method: "POST" })
       ref: enquiry.ref as string,
       estimated: Number(enquiry.estimated_value),
       itemCount: enquiry.item_count as number,
+      discount,
+      couponCode,
     };
   });
 
