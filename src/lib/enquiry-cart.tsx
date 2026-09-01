@@ -10,7 +10,11 @@ export type CartItem = {
   qty: number;
   categorySlug: string | null;
   imageUrl?: string | null;
+  /** "combo" lines represent a whole gift box, not a single product */
+  kind?: "product" | "combo";
+  comboItemCount?: number;
 };
+
 
 type Ctx = {
   items: CartItem[];
