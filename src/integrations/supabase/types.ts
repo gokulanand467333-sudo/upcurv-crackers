@@ -122,12 +122,59 @@ export type Database = {
         }
         Relationships: []
       }
+      coupons: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          discount_type: string
+          expires_at: string | null
+          id: string
+          label: string | null
+          max_discount: number | null
+          min_value: number
+          updated_at: string
+          used_count: number
+          value: number
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          discount_type?: string
+          expires_at?: string | null
+          id?: string
+          label?: string | null
+          max_discount?: number | null
+          min_value?: number
+          updated_at?: string
+          used_count?: number
+          value?: number
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          discount_type?: string
+          expires_at?: string | null
+          id?: string
+          label?: string | null
+          max_discount?: number | null
+          min_value?: number
+          updated_at?: string
+          used_count?: number
+          value?: number
+        }
+        Relationships: []
+      }
       enquiries: {
         Row: {
           address: string | null
           city: string
           contact_method: string | null
+          coupon_code: string | null
           created_at: string
+          discount_amount: number
           estimated_value: number
           follow_up_at: string | null
           free_text: string | null
@@ -147,7 +194,9 @@ export type Database = {
           address?: string | null
           city: string
           contact_method?: string | null
+          coupon_code?: string | null
           created_at?: string
+          discount_amount?: number
           estimated_value?: number
           follow_up_at?: string | null
           free_text?: string | null
@@ -167,7 +216,9 @@ export type Database = {
           address?: string | null
           city?: string
           contact_method?: string | null
+          coupon_code?: string | null
           created_at?: string
+          discount_amount?: number
           estimated_value?: number
           follow_up_at?: string | null
           free_text?: string | null
