@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useMutation } from "@tanstack/react-query";
-import { CheckCircle2, Download, MessageCircle, Minus, Plus, Trash2 } from "lucide-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { CheckCircle2, Download, MessageCircle, Minus, Plus, Tag, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { categoryImage } from "@/lib/catalog";
+import { categoryImage, couponDiscount, couponsQuery } from "@/lib/catalog";
 import { readSource, useCart } from "@/lib/enquiry-cart";
 import { submitEnquiry } from "@/lib/enquiry.functions";
 import { downloadSummaryPdf } from "@/lib/enquiry-pdf";
@@ -65,6 +65,9 @@ function EnquiryPage() {
   const submit = useServerFn(submitEnquiry);
   const [done, setDone] = useState<Done | null>(null);
   const [open, setOpen] = useState(false);
+  const [couponInput, setCouponInput] = useState("");
+  const [couponCode, setCouponCode] = useState<string | null>(null);
+  const coupons = useQuery(couponsQuery);
 
   const [form, setForm] = useState({
     name: "",
@@ -77,6 +80,26 @@ function EnquiryPage() {
 
   const mrpTotal = items.reduce((s, i) => s + i.qty * (i.mrp && i.mrp > i.price ? i.mrp : i.price), 0);
   const saved = Math.max(0, mrpTotal - total);
+
+  const appliedCoupon = (coupons.data ?? []).find((c) => c.code === couponCode) ?? null;
+  const couponOff = appliedCoupon ? couponDiscount(appliedCoupon, total).discount : 0;
+  const payable = Math.max(0, total - couponOff);
+
+  const applyCoupon = (raw: string) => {
+    const code = raw.trim().toUpperCase();
+    const found = (coupons.data ?? []).find((c) => c.code === code);
+    if (!found) {
+      toast.error("Invalid coupon code");
+      return;
+    }
+    const res = couponDiscount(found, total);
+    if (!res.ok) {
+      toast.error(res.reason);
+      return;
+    }
+    setCouponCode(found.code);
+    toast.success(`Coupon applied — you save ${inr(res.discount)}`);
+  };
 
   const mutation = useMutation({
     mutationFn: async () =>
@@ -93,12 +116,13 @@ function EnquiryPage() {
           freeText: null,
           source: readSource(),
           items: items.map((i) => ({
-            productId: i.productId,
+            productId: i.kind === "combo" ? null : i.productId,
             code: i.code,
             name: i.name,
             qty: i.qty,
             price: i.price,
           })),
+          couponCode,
         },
       }),
     onSuccess: (res) => {
@@ -216,7 +240,11 @@ function EnquiryPage() {
                   />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium leading-snug">{pick(lang, i.name, i.nameTa)}</p>
-                    <p className="text-xs text-muted-foreground">{i.code}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {i.kind === "combo"
+                        ? `Gift box · ${i.comboItemCount ?? 0} items inside`
+                        : i.code}
+                    </p>
                     <div className="mt-1 flex flex-wrap items-baseline gap-2">
                       <span className="text-sm font-semibold">{inr(i.price * i.qty)}</span>
                       {hasMrp && (
@@ -269,6 +297,65 @@ function EnquiryPage() {
         {items.length > 0 && (
           <>
             <div className="mt-4 rounded-2xl border border-border bg-card p-5">
+              <h2 className="flex items-center gap-2 text-lg font-semibold">
+                <Tag className="size-4 text-primary" /> Coupons
+              </h2>
+              {appliedCoupon ? (
+                <div className="mt-3 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-emerald-700">{appliedCoupon.code}</p>
+                    <p className="text-xs text-emerald-700/80">
+                      {appliedCoupon.label ?? "Coupon applied"} · saves {inr(couponOff)}
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setCouponCode(null);
+                      setCouponInput("");
+                    }}
+                  >
+                    Remove
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <div className="mt-3 flex gap-2">
+                    <Input
+                      value={couponInput}
+                      onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                      placeholder="Enter coupon code"
+                      className="h-11 flex-1 uppercase"
+                    />
+                    <Button className="h-11" onClick={() => applyCoupon(couponInput)}>
+                      Apply
+                    </Button>
+                  </div>
+                  {(coupons.data ?? []).length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      {(coupons.data ?? []).map((c) => (
+                        <button
+                          key={c.id}
+                          onClick={() => applyCoupon(c.code)}
+                          className="flex w-full items-center gap-3 rounded-xl border border-dashed border-border px-3 py-2 text-left"
+                        >
+                          <span className="rounded-md bg-accent px-2 py-0.5 font-mono text-xs font-semibold">
+                            {c.code}
+                          </span>
+                          <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
+                            {c.label ?? "Offer"}
+                          </span>
+                          <span className="text-xs font-semibold text-primary">Apply</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            <div className="mt-4 rounded-2xl border border-border bg-card p-5">
               <h2 className="text-lg font-semibold">Bill details</h2>
               <div className="mt-4 space-y-2 text-sm">
                 <div className="flex items-center justify-between">
@@ -279,6 +366,12 @@ function EnquiryPage() {
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Discount</span>
                     <span className="font-medium text-emerald-600">− {inr(saved)}</span>
+                  </div>
+                )}
+                {couponOff > 0 && appliedCoupon && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Coupon ({appliedCoupon.code})</span>
+                    <span className="font-medium text-emerald-600">− {inr(couponOff)}</span>
                   </div>
                 )}
                 <div className="flex items-center justify-between">
@@ -294,12 +387,12 @@ function EnquiryPage() {
                       {inr(mrpTotal)}
                     </span>
                   )}
-                  <span className="text-xl font-bold">{inr(total)}</span>
+                  <span className="text-xl font-bold">{inr(payable)}</span>
                 </div>
               </div>
               {saved > 0 && (
                 <p className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700">
-                  🎉 You save {inr(saved)} on this enquiry
+                  🎉 You save {inr(saved + couponOff)} on this enquiry
                 </p>
               )}
               <p className="mt-2 text-xs text-muted-foreground">
@@ -315,7 +408,7 @@ function EnquiryPage() {
               <div className="mx-auto flex w-full max-w-3xl items-center gap-3">
                 <div className="min-w-0">
                   <p className="text-xs text-muted-foreground">{count} items</p>
-                  <p className="text-lg font-bold leading-none">{inr(total)}</p>
+                  <p className="text-lg font-bold leading-none">{inr(payable)}</p>
                 </div>
                 <Button size="lg" className="ml-auto flex-1" onClick={() => setOpen(true)}>
                   {t("sendEnquiry")}
