@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ProductCard, ProductCardSkeleton } from "@/components/product-card";
 import { SiteShell } from "@/components/site-shell";
 import { Input } from "@/components/ui/input";
-import { categoriesQuery, EXPERIENCES, productsQuery } from "@/lib/catalog";
+import { categoriesQuery, categoryImage, EXPERIENCES, productsQuery } from "@/lib/catalog";
 import { pick, useLang } from "@/lib/i18n";
 
 type CatalogueSearch = { category?: string; experience?: string; q?: string };
@@ -84,22 +84,46 @@ function Catalogue() {
           />
         </div>
 
-        <div className="-mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1">
-          <button
-            onClick={() => navigate({ search: {} })}
-            className={`shrink-0 rounded-full border px-3.5 py-1.5 text-sm ${!category && !experience ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"}`}
-          >
-            {t("allCategories")}
-          </button>
-          {(categories.data ?? []).map((c) => (
-            <button
-              key={c.id}
-              onClick={() => navigate({ search: { category: c.slug } })}
-              className={`shrink-0 rounded-full border px-3.5 py-1.5 text-sm ${category === c.slug ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"}`}
-            >
-              {c.emoji} {pick(lang, c.name, c.name_ta)}
-            </button>
-          ))}
+        <div className="mt-5">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold">Shop by category</h2>
+            {(category || experience) && (
+              <button
+                onClick={() => navigate({ search: {} })}
+                className="text-xs font-semibold text-primary"
+              >
+                {t("allCategories")}
+              </button>
+            )}
+          </div>
+          <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
+            {categories.isLoading
+              ? Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="shimmer h-24 rounded-xl" />
+                ))
+              : (categories.data ?? []).map((c) => {
+                  const on = category === c.slug;
+                  return (
+                    <button
+                      key={c.id}
+                      onClick={() => navigate({ search: on ? {} : { category: c.slug } })}
+                      className={`overflow-hidden rounded-xl border text-left transition ${on ? "border-primary ring-2 ring-primary/30" : "border-border"}`}
+                    >
+                      <img
+                        src={c.image_url || categoryImage(c.slug)}
+                        alt={c.name}
+                        loading="lazy"
+                        width={240}
+                        height={140}
+                        className="h-16 w-full object-cover sm:h-20"
+                      />
+                      <p className="truncate px-2 py-1.5 text-[11px] font-medium leading-tight sm:text-xs">
+                        {c.emoji} {pick(lang, c.name, c.name_ta)}
+                      </p>
+                    </button>
+                  );
+                })}
+          </div>
         </div>
 
         <div className="-mx-4 mt-2 flex gap-2 overflow-x-auto px-4 pb-1">

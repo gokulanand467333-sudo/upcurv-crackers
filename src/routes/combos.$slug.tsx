@@ -158,21 +158,17 @@ function ComboDetail() {
             size="lg"
             className="mt-4 w-full"
             onClick={() => {
-              lines.forEach((ci) => {
-                const p = ci.products!;
-                add(
-                  {
-                    productId: p.id,
-                    code: p.code,
-                    name: p.name,
-                    nameTa: p.name_ta,
-                    price: Number(p.price),
-                    mrp: p.mrp == null ? null : Number(p.mrp),
-                    categorySlug: null,
-                    imageUrl: p.image_url,
-                  },
-                  ci.qty,
-                );
+              add({
+                productId: combo.id,
+                code: combo.slug.toUpperCase(),
+                name: combo.title,
+                nameTa: combo.title_ta,
+                price: comboPrice,
+                mrp: mrpTotal > comboPrice ? mrpTotal : null,
+                categorySlug: "gift-boxes",
+                imageUrl: combo.image_url,
+                kind: "combo",
+                comboItemCount: lines.length,
               });
               toast.success(`${combo.title} added to your enquiry`);
               navigate({ to: "/enquiry" });
@@ -180,6 +176,7 @@ function ComboDetail() {
           >
             Add Combo to Enquiry
           </Button>
+
           <p className="mt-2 text-xs text-muted-foreground">
             Final availability, pricing and fulfilment are confirmed by our team.
           </p>

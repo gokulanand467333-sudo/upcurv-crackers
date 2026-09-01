@@ -114,3 +114,19 @@ export function buildBox(products: Product[], budget: number, tags: string[]) {
   }
   return { picked, spent };
 }
+
+export type { Coupon } from "@/lib/coupon-math";
+export { couponDiscount } from "@/lib/coupon-math";
+
+export const couponsQuery = queryOptions({
+  queryKey: ["coupons"],
+  queryFn: async () => {
+    const { data, error } = await supabase
+      .from("coupons")
+      .select("*")
+      .eq("active", true)
+      .order("created_at");
+    if (error) throw error;
+    return data;
+  },
+});

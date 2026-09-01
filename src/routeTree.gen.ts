@@ -18,6 +18,7 @@ import { Route as CombosRouteImport } from './routes/combos'
 import { Route as EnquiryRouteImport } from './routes/enquiry'
 import { Route as TrackRouteImport } from './routes/track'
 import { Route as AuthenticatedCategoriesRouteImport } from './routes/_authenticated/categories'
+import { Route as AuthenticatedCouponsRouteImport } from './routes/_authenticated/coupons'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedManageCombosRouteImport } from './routes/_authenticated/manage-combos'
 import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticated/products'
@@ -70,6 +71,11 @@ const AuthenticatedCategoriesRoute = AuthenticatedCategoriesRouteImport.update({
   path: '/categories',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCouponsRoute = AuthenticatedCouponsRouteImport.update({
+  id: '/coupons',
+  path: '/coupons',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -118,6 +124,7 @@ export interface FileRoutesByFullPath {
   '/enquiry': typeof EnquiryRoute
   '/track': typeof TrackRoute
   '/categories': typeof AuthenticatedCategoriesRoute
+  '/coupons': typeof AuthenticatedCouponsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/manage-combos': typeof AuthenticatedManageCombosRoute
   '/products': typeof AuthenticatedProductsRoute
@@ -134,6 +141,7 @@ export interface FileRoutesByTo {
   '/enquiry': typeof EnquiryRoute
   '/track': typeof TrackRoute
   '/categories': typeof AuthenticatedCategoriesRoute
+  '/coupons': typeof AuthenticatedCouponsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/manage-combos': typeof AuthenticatedManageCombosRoute
   '/products': typeof AuthenticatedProductsRoute
@@ -153,6 +161,7 @@ export interface FileRoutesById {
   '/enquiry': typeof EnquiryRoute
   '/track': typeof TrackRoute
   '/_authenticated/categories': typeof AuthenticatedCategoriesRoute
+  '/_authenticated/coupons': typeof AuthenticatedCouponsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/manage-combos': typeof AuthenticatedManageCombosRoute
   '/_authenticated/products': typeof AuthenticatedProductsRoute
@@ -172,6 +181,7 @@ export interface FileRouteTypes {
     | '/enquiry'
     | '/track'
     | '/categories'
+    | '/coupons'
     | '/dashboard'
     | '/manage-combos'
     | '/products'
@@ -188,6 +198,7 @@ export interface FileRouteTypes {
     | '/enquiry'
     | '/track'
     | '/categories'
+    | '/coupons'
     | '/dashboard'
     | '/manage-combos'
     | '/products'
@@ -206,6 +217,7 @@ export interface FileRouteTypes {
     | '/enquiry'
     | '/track'
     | '/_authenticated/categories'
+    | '/_authenticated/coupons'
     | '/_authenticated/dashboard'
     | '/_authenticated/manage-combos'
     | '/_authenticated/products'
@@ -291,6 +303,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCategoriesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/coupons': {
+      id: '/_authenticated/coupons'
+      path: '/coupons'
+      fullPath: '/coupons'
+      preLoaderRoute: typeof AuthenticatedCouponsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -345,6 +364,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedCategoriesRoute: typeof AuthenticatedCategoriesRoute
+  AuthenticatedCouponsRoute: typeof AuthenticatedCouponsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedManageCombosRoute: typeof AuthenticatedManageCombosRoute
   AuthenticatedProductsRoute: typeof AuthenticatedProductsRoute
@@ -354,6 +374,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCategoriesRoute: AuthenticatedCategoriesRoute,
+  AuthenticatedCouponsRoute: AuthenticatedCouponsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedManageCombosRoute: AuthenticatedManageCombosRoute,
   AuthenticatedProductsRoute: AuthenticatedProductsRoute,
