@@ -86,7 +86,7 @@ function Catalogue() {
 
         <div className="mt-5">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold">Shop by category</h2>
+            <h2 className="text-sm font-semibold">{t("shopByCategory")}</h2>
             {(category || experience) && (
               <button
                 onClick={() => navigate({ search: {} })}
@@ -107,7 +107,7 @@ function Catalogue() {
                     <button
                       key={c.id}
                       onClick={() => navigate({ search: on ? {} : { category: c.slug } })}
-                      className={`overflow-hidden rounded-xl border text-left transition ${on ? "border-primary ring-2 ring-primary/30" : "border-border"}`}
+                      className={`elevate elevate-hover overflow-hidden rounded-xl border bg-card text-left ${on ? "border-primary ring-2 ring-primary/30" : "border-border"}`}
                     >
                       <img
                         src={c.image_url || categoryImage(c.slug)}
@@ -135,7 +135,7 @@ function Catalogue() {
               }
               className={`shrink-0 rounded-full border px-3 py-1 text-xs ${experience === e.key ? "border-primary bg-accent" : "border-border bg-card text-muted-foreground"}`}
             >
-              {e.emoji} {e.label}
+              {e.emoji} {pick(lang, e.label, e.labelTa)}
             </button>
           ))}
         </div>
@@ -149,9 +149,7 @@ function Catalogue() {
         </div>
 
         {!loading && filtered.length === 0 && (
-          <p className="py-16 text-center text-sm text-muted-foreground">
-            No products match this filter.
-          </p>
+          <p className="py-16 text-center text-sm text-muted-foreground">{t("noMatch")}</p>
         )}
       </div>
     </SiteShell>

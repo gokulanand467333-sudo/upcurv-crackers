@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { ArrowRight, ScanLine, Sparkles } from "lucide-react";
+import { ScanLine, Sparkles } from "lucide-react";
 import { Suspense } from "react";
 
 import { ProductCard, ProductCardSkeleton } from "@/components/product-card";
@@ -30,15 +30,6 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-const INTENTS = [
-  { emoji: "🎇", label: "I want a ₹1,000 celebration", to: "/build-box", search: { budget: 1000 } },
-  { emoji: "🎆", label: "I want a ₹2,500 family pack", to: "/build-box", search: { budget: 2500 } },
-  { emoji: "✨", label: "I want mostly colourful crackers", to: "/catalogue", search: { experience: "colourful" } },
-  { emoji: "👨‍👩‍👧", label: "I need a family-friendly selection", to: "/build-box", search: {} },
-  { emoji: "🎁", label: "I want a Diwali gift box", to: "/combos", search: {} },
-  { emoji: "💰", label: "Maximum variety within my budget", to: "/build-box", search: {} },
-  { emoji: "🛒", label: "I already know what I want", to: "/catalogue", search: {} },
-];
 
 function FeaturedProducts() {
   const { data: products } = useSuspenseQuery(productsQuery);
@@ -55,10 +46,10 @@ function FeaturedProducts() {
 }
 
 function Home() {
-  const { lang } = useLang();
+  const { lang, t } = useLang();
 
   return (
-    <SiteShell>
+    <SiteShell showFooter>
       <section className="brand-gradient border-b border-border">
         <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-10 md:grid-cols-2 md:items-center md:py-16">
           <div>
@@ -77,18 +68,18 @@ function Home() {
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
               <Button asChild size="lg">
-                <Link to="/catalogue">Browse Crackers</Link>
+                <Link to="/catalogue">{t("browse")}</Link>
               </Button>
               <Button asChild size="lg" variant="secondary">
                 <Link to="/build-box" search={{}}>
-                  Build My Diwali Box
+                  {t("buildBox")}
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline">
-                <Link to="/combos">View Combos</Link>
+                <Link to="/combos">{t("combos")}</Link>
               </Button>
               <Button asChild size="lg" variant="ghost">
-                <Link to="/enquiry">Send Enquiry</Link>
+                <Link to="/enquiry">{t("sendEnquiry")}</Link>
               </Button>
             </div>
           </div>
@@ -107,29 +98,8 @@ function Home() {
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-6xl px-4 py-10">
-        <h2 className="text-2xl font-semibold">What are you looking for?</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Tell us the occasion and we&apos;ll guide you through the catalogue.
-        </p>
-        <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {INTENTS.map((i) => (
-            <Link
-              key={i.label}
-              to={i.to}
-              search={i.search}
-              className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 text-sm font-medium transition-colors hover:border-primary/40 hover:bg-accent/50"
-            >
-              <span className="text-xl">{i.emoji}</span>
-              {i.label}
-              <ArrowRight className="ml-auto size-4 text-muted-foreground" />
-            </Link>
-          ))}
-        </div>
-      </section>
-
       <section className="mx-auto w-full max-w-6xl px-4 pb-10">
-        <h2 className="text-2xl font-semibold">Shop by experience</h2>
+        <h2 className="text-2xl font-semibold">{t("shopByExperience")}</h2>
         <div className="mt-4 flex flex-wrap gap-2">
           {EXPERIENCES.map((e) => (
             <Link
@@ -138,7 +108,7 @@ function Home() {
               search={{ experience: e.key }}
               className="rounded-full border border-border bg-card px-4 py-2 text-sm font-medium hover:border-primary/40 hover:bg-accent/50"
             >
-              {e.emoji} {e.label}
+              {e.emoji} {pick(lang, e.label, e.labelTa)}
             </Link>
           ))}
         </div>
@@ -146,9 +116,9 @@ function Home() {
 
       <section className="mx-auto w-full max-w-6xl px-4 pb-10">
         <div className="flex items-end justify-between">
-          <h2 className="text-2xl font-semibold">Popular this season</h2>
+          <h2 className="text-2xl font-semibold">{t("popular")}</h2>
           <Link to="/catalogue" className="text-sm font-medium text-primary">
-            View all
+            {t("viewAll")}
           </Link>
         </div>
         <div className="mt-4">

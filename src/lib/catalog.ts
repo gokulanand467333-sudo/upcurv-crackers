@@ -32,12 +32,12 @@ export const AVAILABILITY_LABEL: Record<string, string> = {
 };
 
 export const EXPERIENCES = [
-  { key: "sky", label: "Sky & Aerial", emoji: "🎆" },
-  { key: "sparkle", label: "Sparkle & Light", emoji: "✨" },
-  { key: "colourful", label: "Colourful", emoji: "🌈" },
-  { key: "traditional", label: "Traditional", emoji: "🪔" },
-  { key: "gift", label: "Gift Packs", emoji: "🎁" },
-  { key: "family", label: "Family Collections", emoji: "👨‍👩‍👧" },
+  { key: "sky", label: "Sky & Aerial", labelTa: "வானவேடிக்கை", emoji: "🎆" },
+  { key: "sparkle", label: "Sparkle & Light", labelTa: "மின்னும் ஒளி", emoji: "✨" },
+  { key: "colourful", label: "Colourful", labelTa: "வண்ணமயம்", emoji: "🌈" },
+  { key: "traditional", label: "Traditional", labelTa: "பாரம்பரியம்", emoji: "🪔" },
+  { key: "gift", label: "Gift Packs", labelTa: "பரிசு பெட்டி", emoji: "🎁" },
+  { key: "family", label: "Family Collections", labelTa: "குடும்ப தொகுப்பு", emoji: "👨‍👩‍👧" },
 ];
 
 export const BOX_TAGS = [
