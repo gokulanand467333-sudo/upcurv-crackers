@@ -107,7 +107,7 @@ function Catalogue() {
                     <button
                       key={c.id}
                       onClick={() => navigate({ search: on ? {} : { category: c.slug } })}
-                      className={`overflow-hidden rounded-xl border text-left transition ${on ? "border-primary ring-2 ring-primary/30" : "border-border"}`}
+                      className={`elevate elevate-hover overflow-hidden rounded-xl border bg-card text-left ${on ? "border-primary ring-2 ring-primary/30" : "border-border"}`}
                     >
                       <img
                         src={c.image_url || categoryImage(c.slug)}

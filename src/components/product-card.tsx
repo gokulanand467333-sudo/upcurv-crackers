@@ -45,7 +45,7 @@ export function ProductCard({
   const mrp = product.mrp ? Number(product.mrp) : null;
 
   return (
-    <div className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-shadow hover:shadow-[0_8px_30px_-12px_rgba(0,0,0,0.15)]">
+    <div className="group elevate elevate-hover flex flex-col overflow-hidden rounded-2xl border border-border bg-card">
       <div className="relative aspect-square overflow-hidden bg-secondary/40">
         <img
           src={product.image_url || categoryImage(categorySlug)}
