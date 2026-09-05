@@ -84,7 +84,13 @@ function CartButton({ count }: { count: number }) {
   );
 }
 
-export function SiteShell({ children }: { children: ReactNode }) {
+export function SiteShell({
+  children,
+  showFooter = false,
+}: {
+  children: ReactNode;
+  showFooter?: boolean;
+}) {
   const { count } = useCart();
   const { lang, t } = useLang();
   const [open, setOpen] = useState(false);
@@ -95,8 +101,9 @@ export function SiteShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col bg-secondary/30">
       <div className="bg-accent/70 px-4 py-2 text-center text-[11px] font-medium leading-snug text-accent-foreground">
-        Enquiry only · No online payment · Our team confirms availability ✨
+        {t("announce")}
       </div>
+
 
       <header className="sticky top-0 z-40 rounded-b-3xl bg-primary text-primary-foreground shadow-sm">
         <div className="mx-auto w-full max-w-6xl px-4 pb-3 pt-3">
