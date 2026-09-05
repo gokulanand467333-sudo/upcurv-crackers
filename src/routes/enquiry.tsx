@@ -404,7 +404,7 @@ function EnquiryPage() {
               <LegalNotice compact />
             </div>
 
-            <div className="fixed inset-x-0 bottom-16 z-30 border-t border-border bg-background/95 p-3 backdrop-blur md:bottom-0">
+            <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 border-t border-border bg-background/95 p-3 backdrop-blur md:bottom-0">
               <div className="mx-auto flex w-full max-w-3xl items-center gap-3">
                 <div className="min-w-0">
                   <p className="text-xs text-muted-foreground">{count} items</p>

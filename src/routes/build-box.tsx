@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { categoriesQuery, categoryImage, productsQuery } from "@/lib/catalog";
 import { useCart } from "@/lib/enquiry-cart";
+import { pick as pickLang, useLang } from "@/lib/i18n";
 import { inr } from "@/lib/shop";
 
 const BUDGETS = [1000, 2000, 3000, 5000, 10000];
@@ -47,6 +48,12 @@ function BuildBox() {
   const categories = useQuery(categoriesQuery);
   const { add } = useCart();
   const navigate = useNavigate();
+  const { lang, t } = useLang();
+
+  const goToStep = (next: number) => {
+    setStep(next);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const loading = products.isLoading || categories.isLoading;
 
@@ -85,11 +92,8 @@ function BuildBox() {
   return (
     <SiteShell>
       <div className="mx-auto w-full max-w-3xl px-4 py-6 pb-40">
-        <h1 className="text-3xl font-semibold">Build My Diwali Box</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Choose a budget, then pick items category by category. Nothing is reserved until our team
-          confirms.
-        </p>
+        <h1 className="text-3xl font-semibold">{t("buildTitle")}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{t("buildSub")}</p>
 
         {/* progress */}
         <div className="mt-4 flex items-center gap-1.5">
@@ -101,8 +105,12 @@ function BuildBox() {
           ))}
         </div>
         <p className="mt-2 text-xs font-medium text-muted-foreground">
-          Step {step + 1} of {totalSteps}
-          {activeCat ? ` · ${activeCat.name}` : isReview ? " · Review" : " · Budget"}
+          {t("step")} {step + 1} {t("of")} {totalSteps}
+          {activeCat
+            ? ` · ${pickLang(lang, activeCat.name, activeCat.name_ta)}`
+            : isReview
+              ? ` · ${t("review")}`
+              : ` · ${t("budget")}`}
         </p>
 
         {loading && (
@@ -122,7 +130,7 @@ function BuildBox() {
         {/* Step 0: budget */}
         {!loading && step === 0 && (
           <div className="mt-6 rounded-2xl border border-border bg-card p-4">
-            <p className="text-sm font-semibold">My budget</p>
+            <p className="text-sm font-semibold">{t("myBudget")}</p>
             <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
               {BUDGETS.map((b) => (
                 <button
@@ -139,9 +147,7 @@ function BuildBox() {
                 </button>
               ))}
             </div>
-            <p className="mt-4 text-xs text-muted-foreground">
-              We&apos;ll show your running total against this budget as you pick items.
-            </p>
+            <p className="mt-4 text-xs text-muted-foreground">{t("budgetHint")}</p>
           </div>
         )}
 
@@ -159,11 +165,9 @@ function BuildBox() {
               />
               <div>
                 <p className="text-sm font-semibold">
-                  {activeCat.emoji} {activeCat.name}
+                  {activeCat.emoji} {pickLang(lang, activeCat.name, activeCat.name_ta)}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  Pick what you like, or skip this category.
-                </p>
+                <p className="text-xs text-muted-foreground">{t("pickOrSkip")}</p>
               </div>
             </div>
 
@@ -183,7 +187,9 @@ function BuildBox() {
                     className="size-12 shrink-0 rounded-lg object-cover"
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{p.name}</p>
+                    <p className="truncate text-sm font-medium">
+                      {pickLang(lang, p.name, p.name_ta)}
+                    </p>
                     <p className="truncate text-xs text-muted-foreground">
                       {p.code}
                       {p.pack ? ` · ${p.pack}` : ""} · {inr(p.price)}
@@ -201,7 +207,7 @@ function BuildBox() {
                     </div>
                   ) : (
                     <Button size="sm" className="shrink-0" onClick={() => setQty(p.id, 1)}>
-                      Add
+                      {t("add")}
                     </Button>
                   )}
                 </div>
@@ -209,9 +215,7 @@ function BuildBox() {
             })}
 
             {catProducts.length === 0 && (
-              <p className="py-8 text-center text-sm text-muted-foreground">
-                No items in this category right now.
-              </p>
+              <p className="py-8 text-center text-sm text-muted-foreground">{t("noneHere")}</p>
             )}
           </div>
         )}
@@ -221,7 +225,7 @@ function BuildBox() {
           <div className="mt-5 space-y-2">
             {chosen.length === 0 && (
               <p className="py-10 text-center text-sm text-muted-foreground">
-                You haven&apos;t picked anything yet. Go back and choose a few items.
+                {t("nothingPicked")}
               </p>
             )}
             {chosen.map(({ product, qty }) => (
@@ -238,7 +242,9 @@ function BuildBox() {
                   className="size-12 shrink-0 rounded-lg object-cover"
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{product.name}</p>
+                  <p className="truncate text-sm font-medium">
+                    {pickLang(lang, product.name, product.name_ta)}
+                  </p>
                   <p className="text-xs text-muted-foreground">
                     {product.code} · × {qty}
                   </p>
@@ -254,14 +260,14 @@ function BuildBox() {
 
       {/* Sticky footer */}
       {!loading && (
-        <div className="fixed inset-x-0 bottom-16 z-40 border-t border-border bg-background/95 backdrop-blur md:bottom-0">
+        <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-40 border-t border-border bg-background/95 backdrop-blur md:bottom-0">
           <div className="mx-auto w-full max-w-3xl px-4 py-3">
             <div className="flex items-center justify-between text-xs">
               <span className="font-medium">
-                {chosen.reduce((s, x) => s + x.qty, 0)} items · {inr(spent)}
+                {chosen.reduce((s, x) => s + x.qty, 0)} {t("items")} · {inr(spent)}
               </span>
               <span className={spent > budget ? "text-destructive" : "text-muted-foreground"}>
-                Budget {inr(budget)}
+                {t("budget")} {inr(budget)}
               </span>
             </div>
             <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
@@ -272,13 +278,13 @@ function BuildBox() {
             </div>
             <div className="mt-2.5 flex gap-2">
               {step > 0 && (
-                <Button variant="outline" onClick={() => setStep((s) => s - 1)}>
-                  <ArrowLeft className="size-4" /> Back
+                <Button variant="outline" onClick={() => goToStep(step - 1)}>
+                  <ArrowLeft className="size-4" /> {t("back")}
                 </Button>
               )}
               {!isReview ? (
-                <Button className="flex-1" onClick={() => setStep((s) => s + 1)}>
-                  {step === 0 ? "Start picking" : "Next"} <ArrowRight className="size-4" />
+                <Button className="flex-1" onClick={() => goToStep(step + 1)}>
+                  {step === 0 ? t("startPicking") : t("next")} <ArrowRight className="size-4" />
                 </Button>
               ) : (
                 <Button
@@ -304,7 +310,7 @@ function BuildBox() {
                     navigate({ to: "/enquiry" });
                   }}
                 >
-                  <Check className="size-4" /> Add My Box to Enquiry
+                  <Check className="size-4" /> {t("addMyBox")}
                 </Button>
               )}
             </div>
