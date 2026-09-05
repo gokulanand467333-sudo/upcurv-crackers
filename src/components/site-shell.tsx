@@ -201,47 +201,49 @@ export function SiteShell({
         </div>
       </header>
 
-      <main className="flex-1 pb-20 md:pb-0">{children}</main>
+      <main className="flex-1 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">{children}</main>
 
-      <footer className="mt-12 border-t border-border bg-background pb-20 md:pb-0">
-        <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-3">
-          <div>
-            <h3 className="text-lg font-semibold">{SHOP.name}</h3>
-            <p className="mt-1 text-sm text-muted-foreground">{SHOP.tagline}</p>
-            <p className="mt-3 text-sm text-muted-foreground">
-              {SHOP.addressLines.map((l) => (
-                <span key={l} className="block">
-                  {l}
-                </span>
-              ))}
-            </p>
+      {showFooter && (
+        <footer className="mt-12 border-t border-border bg-background">
+          <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-3">
+            <div>
+              <h3 className="text-lg font-semibold">{SHOP.name}</h3>
+              <p className="mt-1 text-sm text-muted-foreground">{SHOP.tagline}</p>
+              <p className="mt-3 text-sm text-muted-foreground">
+                {SHOP.addressLines.map((l) => (
+                  <span key={l} className="block">
+                    {l}
+                  </span>
+                ))}
+              </p>
+            </div>
+            <div className="text-sm">
+              <h4 className="font-semibold">{t("contact")}</h4>
+              <a
+                href={`tel:${SHOP.phoneDial}`}
+                className="mt-2 flex items-center gap-2 text-muted-foreground hover:text-foreground"
+              >
+                <Phone className="size-4" /> {SHOP.phone}
+              </a>
+              <a
+                href={`https://wa.me/${SHOP.whatsapp}`}
+                className="mt-1 flex items-center gap-2 text-muted-foreground hover:text-foreground"
+              >
+                <MessageCircle className="size-4" /> WhatsApp
+              </a>
+              <p className="mt-2 text-muted-foreground">{SHOP.hours}</p>
+              <p className="mt-2 text-muted-foreground">{SHOP.email}</p>
+            </div>
+            <div className="sm:col-span-2 lg:col-span-1">
+              <LegalNotice />
+              <p className="mt-3 text-[11px] text-muted-foreground">{SHOP.licence}</p>
+            </div>
           </div>
-          <div className="text-sm">
-            <h4 className="font-semibold">Contact</h4>
-            <a
-              href={`tel:${SHOP.phoneDial}`}
-              className="mt-2 flex items-center gap-2 text-muted-foreground hover:text-foreground"
-            >
-              <Phone className="size-4" /> {SHOP.phone}
-            </a>
-            <a
-              href={`https://wa.me/${SHOP.whatsapp}`}
-              className="mt-1 flex items-center gap-2 text-muted-foreground hover:text-foreground"
-            >
-              <MessageCircle className="size-4" /> WhatsApp
-            </a>
-            <p className="mt-2 text-muted-foreground">{SHOP.hours}</p>
-            <p className="mt-2 text-muted-foreground">{SHOP.email}</p>
-          </div>
-          <div className="sm:col-span-2 lg:col-span-1">
-            <LegalNotice />
-            <p className="mt-3 text-[11px] text-muted-foreground">{SHOP.licence}</p>
-          </div>
-        </div>
-      </footer>
+        </footer>
+      )}
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background pb-[env(safe-area-inset-bottom)] md:hidden">
-        <div className="grid grid-cols-5">
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
+        <div className="grid h-16 grid-cols-5">
           {TABS.map((tab) => (
             <Link
               key={tab.to}
@@ -249,7 +251,7 @@ export function SiteShell({
               search={{}}
               activeOptions={{ exact: tab.to === "/" }}
               activeProps={{ className: "text-primary" }}
-              className="flex flex-col items-center gap-1 py-2 text-[11px] font-medium text-muted-foreground"
+              className="flex flex-col items-center justify-center gap-1 text-[11px] font-medium leading-none text-muted-foreground"
             >
               <tab.icon className="size-5" />
               {lang === "ta" ? tab.labelTa : tab.label}
@@ -258,7 +260,7 @@ export function SiteShell({
           <Link
             to="/enquiry"
             activeProps={{ className: "text-primary" }}
-            className="flex flex-col items-center gap-1 py-2 text-[11px] font-medium text-muted-foreground"
+            className="flex flex-col items-center justify-center gap-1 text-[11px] font-medium leading-none text-muted-foreground"
           >
             <span className="relative">
               <ShoppingCart className="size-5" />
@@ -268,10 +270,11 @@ export function SiteShell({
                 </span>
               )}
             </span>
-            Enquiry
+            {lang === "ta" ? "விசாரணை" : "Enquiry"}
           </Link>
         </div>
       </nav>
+
     </div>
   );
 }
