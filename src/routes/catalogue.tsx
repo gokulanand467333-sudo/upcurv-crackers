@@ -6,7 +6,8 @@ import { useEffect, useMemo, useState } from "react";
 import { ProductCard, ProductCardSkeleton } from "@/components/product-card";
 import { SiteShell } from "@/components/site-shell";
 import { Input } from "@/components/ui/input";
-import { categoriesQuery, categoryImage, EXPERIENCES, productsQuery } from "@/lib/catalog";
+import { categoriesQuery, EXPERIENCES, productsQuery } from "@/lib/catalog";
+import { categoryIcon, categoryTint } from "@/lib/category-icons";
 import { pick, useLang } from "@/lib/i18n";
 
 type CatalogueSearch = { category?: string; experience?: string; q?: string };
