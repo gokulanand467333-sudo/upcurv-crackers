@@ -369,6 +369,45 @@ export type Database = {
           },
         ]
       }
+      site_events: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          path: string | null
+          product_id: string | null
+          product_name: string | null
+          qty: number
+          session_id: string
+          source: string
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          path?: string | null
+          product_id?: string | null
+          product_name?: string | null
+          qty?: number
+          session_id: string
+          source?: string
+          value?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          path?: string | null
+          product_id?: string | null
+          product_name?: string | null
+          qty?: number
+          session_id?: string
+          source?: string
+          value?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

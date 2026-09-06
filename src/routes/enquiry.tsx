@@ -296,6 +296,78 @@ function EnquiryPage() {
 
         {items.length > 0 && (
           <>
+            {nextCoupon && (
+              <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                <p className="text-sm font-semibold text-amber-800">
+                  🎁 Add {inr(nextCoupon.gap)} more to unlock {nextCoupon.coupon.code}
+                </p>
+                <p className="mt-0.5 text-xs text-amber-800/80">
+                  {nextCoupon.coupon.label ?? "Extra savings on this enquiry"}
+                </p>
+                <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-amber-200">
+                  <div
+                    className="h-full rounded-full bg-amber-500 transition-all"
+                    style={{ width: `${nextCoupon.pct}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {suggestions.length > 0 && (
+              <div className="mt-4 rounded-2xl border border-border bg-card p-5">
+                <h2 className="text-lg font-semibold">Popular add-ons</h2>
+                <p className="text-xs text-muted-foreground">
+                  Customers usually add these to complete their Diwali box.
+                </p>
+                <div className="-mx-1 mt-3 flex gap-3 overflow-x-auto px-1 pb-1">
+                  {suggestions.map((p) => (
+                    <div
+                      key={p.id}
+                      className="w-36 shrink-0 rounded-xl border border-border p-2"
+                    >
+                      <img
+                        src={p.image_url || categoryImage(null)}
+                        alt={p.name}
+                        loading="lazy"
+                        width={200}
+                        height={120}
+                        className="h-20 w-full rounded-lg object-cover"
+                      />
+                      <p className="mt-2 line-clamp-2 text-xs font-medium leading-tight">
+                        {pick(lang, p.name, p.name_ta)}
+                      </p>
+                      <p className="mt-1 text-sm font-semibold">{inr(Number(p.price))}</p>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="mt-2 w-full"
+                        onClick={() => {
+                          add({
+                            productId: p.id,
+                            code: p.code,
+                            name: p.name,
+                            nameTa: p.name_ta,
+                            price: Number(p.price),
+                            mrp: p.mrp ? Number(p.mrp) : null,
+                            categorySlug: null,
+                            imageUrl: p.image_url,
+                          });
+                          track("add_to_cart", {
+                            productId: p.id,
+                            productName: p.name,
+                            qty: 1,
+                            value: Number(p.price),
+                          });
+                        }}
+                      >
+                        {t("add")}
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="mt-4 rounded-2xl border border-border bg-card p-5">
               <h2 className="flex items-center gap-2 text-lg font-semibold">
                 <Tag className="size-4 text-primary" /> Coupons
@@ -334,26 +406,52 @@ function EnquiryPage() {
                   </div>
                   {(coupons.data ?? []).length > 0 && (
                     <div className="mt-3 space-y-2">
-                      {(coupons.data ?? []).map((c) => (
-                        <button
-                          key={c.id}
-                          onClick={() => applyCoupon(c.code)}
-                          className="flex w-full items-center gap-3 rounded-xl border border-dashed border-border px-3 py-2 text-left"
-                        >
-                          <span className="rounded-md bg-accent px-2 py-0.5 font-mono text-xs font-semibold">
-                            {c.code}
-                          </span>
-                          <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
-                            {c.label ?? "Offer"}
-                          </span>
-                          <span className="text-xs font-semibold text-primary">Apply</span>
-                        </button>
-                      ))}
+                      {(coupons.data ?? []).map((c) => {
+                        const min = Number(c.min_value);
+                        const gap = Math.max(0, Math.ceil(min - total));
+                        const pct = min > 0 ? Math.min(100, Math.round((total / min) * 100)) : 100;
+                        return (
+                          <div
+                            key={c.id}
+                            className="rounded-xl border border-dashed border-border px-3 py-2.5"
+                          >
+                            <div className="flex items-start gap-2">
+                              <span className="shrink-0 rounded-md bg-accent px-2 py-0.5 font-mono text-xs font-semibold">
+                                {c.code}
+                              </span>
+                              <p className="min-w-0 flex-1 text-xs leading-snug text-muted-foreground">
+                                {c.label ?? "Offer"}
+                              </p>
+                              <button
+                                onClick={() => applyCoupon(c.code)}
+                                disabled={gap > 0}
+                                className="shrink-0 text-xs font-semibold text-primary disabled:text-muted-foreground"
+                              >
+                                Apply
+                              </button>
+                            </div>
+                            {gap > 0 && (
+                              <div className="mt-2">
+                                <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+                                  <div
+                                    className="h-full rounded-full bg-primary transition-all"
+                                    style={{ width: `${pct}%` }}
+                                  />
+                                </div>
+                                <p className="mt-1 text-[11px] text-muted-foreground">
+                                  Add {inr(gap)} more to use this coupon
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </>
               )}
             </div>
+
 
             <div className="mt-4 rounded-2xl border border-border bg-card p-5">
               <h2 className="text-lg font-semibold">Bill details</h2>

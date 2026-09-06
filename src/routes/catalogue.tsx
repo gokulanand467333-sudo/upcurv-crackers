@@ -6,7 +6,8 @@ import { useEffect, useMemo, useState } from "react";
 import { ProductCard, ProductCardSkeleton } from "@/components/product-card";
 import { SiteShell } from "@/components/site-shell";
 import { Input } from "@/components/ui/input";
-import { categoriesQuery, categoryImage, EXPERIENCES, productsQuery } from "@/lib/catalog";
+import { categoriesQuery, EXPERIENCES, productsQuery } from "@/lib/catalog";
+import { categoryIcon, categoryTint } from "@/lib/category-icons";
 import { pick, useLang } from "@/lib/i18n";
 
 type CatalogueSearch = { category?: string; experience?: string; q?: string };
@@ -96,34 +97,44 @@ function Catalogue() {
               </button>
             )}
           </div>
-          <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
+          <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-6 lg:grid-cols-9">
             {categories.isLoading
-              ? Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="shimmer h-24 rounded-xl" />
+              ? Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="flex flex-col items-center gap-2">
+                    <div className="shimmer size-14 rounded-full" />
+                    <div className="shimmer h-3 w-12 rounded" />
+                  </div>
                 ))
-              : (categories.data ?? []).map((c) => {
+              : (categories.data ?? []).map((c, idx) => {
                   const on = category === c.slug;
                   return (
                     <button
                       key={c.id}
                       onClick={() => navigate({ search: on ? {} : { category: c.slug } })}
-                      className={`elevate elevate-hover overflow-hidden rounded-xl border bg-card text-left ${on ? "border-primary ring-2 ring-primary/30" : "border-border"}`}
+                      className="group flex flex-col items-center gap-2"
                     >
-                      <img
-                        src={c.image_url || categoryImage(c.slug)}
-                        alt={c.name}
-                        loading="lazy"
-                        width={240}
-                        height={140}
-                        className="h-16 w-full object-cover sm:h-20"
-                      />
-                      <p className="truncate px-2 py-1.5 text-[11px] font-medium leading-tight sm:text-xs">
-                        {c.emoji} {pick(lang, c.name, c.name_ta)}
-                      </p>
+                      <span
+                        className={`grid size-14 place-items-center rounded-full transition-transform duration-300 group-hover:-translate-y-1 ${categoryTint(idx)} ${on ? "ring-2 ring-primary ring-offset-2" : ""}`}
+                      >
+                        <img
+                          src={categoryIcon(c.slug)}
+                          alt={c.name}
+                          loading="lazy"
+                          width={512}
+                          height={512}
+                          className="size-9 object-contain"
+                        />
+                      </span>
+                      <span
+                        className={`line-clamp-2 text-center text-[11px] leading-tight ${on ? "font-semibold text-primary" : "font-medium"}`}
+                      >
+                        {pick(lang, c.name, c.name_ta)}
+                      </span>
                     </button>
                   );
                 })}
           </div>
+
         </div>
 
         <div className="-mx-4 mt-2 flex gap-2 overflow-x-auto px-4 pb-1">
