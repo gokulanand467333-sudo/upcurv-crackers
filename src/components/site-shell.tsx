@@ -201,7 +201,7 @@ export function SiteShell({
         </div>
       </header>
 
-      <main className="flex-1 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">{children}</main>
+      <main className="flex-1 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0">{children}</main>
 
       {showFooter && (
         <footer className="mt-12 border-t border-border bg-background">
