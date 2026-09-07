@@ -11,7 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { categoryImage, couponDiscount, couponsQuery } from "@/lib/catalog";
+import { categoryImage, couponDiscount, couponsQuery, productsQuery } from "@/lib/catalog";
+import { track } from "@/lib/analytics";
 import { readSource, useCart } from "@/lib/enquiry-cart";
 import { submitEnquiry } from "@/lib/enquiry.functions";
 import { downloadSummaryPdf } from "@/lib/enquiry-pdf";
@@ -59,7 +60,7 @@ function enquiryPdf(done: Done) {
 }
 
 function EnquiryPage() {
-  const { items, setQty, remove, total, count, clear, ready } = useCart();
+  const { items, add, setQty, remove, total, count, clear, ready } = useCart();
   const { lang, t } = useLang();
   const navigate = useNavigate();
   const submit = useServerFn(submitEnquiry);
