@@ -316,10 +316,13 @@ export type Database = {
       products: {
         Row: {
           active: boolean
+          addon_rank: number | null
           availability: Database["public"]["Enums"]["availability_status"]
           category_id: string | null
           code: string
           created_at: string
+          deal_price: number | null
+          deal_rank: number | null
           id: string
           image_url: string | null
           mrp: number | null
@@ -331,10 +334,13 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          addon_rank?: number | null
           availability?: Database["public"]["Enums"]["availability_status"]
           category_id?: string | null
           code: string
           created_at?: string
+          deal_price?: number | null
+          deal_rank?: number | null
           id?: string
           image_url?: string | null
           mrp?: number | null
@@ -346,10 +352,13 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          addon_rank?: number | null
           availability?: Database["public"]["Enums"]["availability_status"]
           category_id?: string | null
           code?: string
           created_at?: string
+          deal_price?: number | null
+          deal_rank?: number | null
           id?: string
           image_url?: string | null
           mrp?: number | null
