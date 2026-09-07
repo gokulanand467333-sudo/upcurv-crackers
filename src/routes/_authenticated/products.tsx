@@ -137,6 +137,10 @@ function ProductsAdmin() {
         image_url: d.image_url.trim() || null,
         tags: d.tags,
         active: d.active,
+        addon_rank: d.addon_rank === "" ? null : Number(d.addon_rank),
+        deal_rank: d.deal_rank === "" ? null : Number(d.deal_rank),
+        deal_price: d.deal_price === "" ? null : Number(d.deal_price),
+
       };
       const res = d.id
         ? await supabase.from("products").update(payload).eq("id", d.id)
