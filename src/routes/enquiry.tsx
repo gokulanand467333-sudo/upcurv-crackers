@@ -103,9 +103,50 @@ function EnquiryPage() {
   })();
 
   const products = useQuery(productsQuery);
-  const suggestions = (products.data ?? [])
-    .filter((p) => p.availability !== "unavailable" && !items.some((i) => i.productId === p.id))
-    .slice(0, 8);
+  const inCart = (id: string) => items.some((i) => i.productId === id);
+  const pool = (products.data ?? []).filter((p) => p.availability !== "unavailable");
+
+  // Seller-curated add-on strip (ordered by the position set in the seller desk).
+  const curatedAddons = pool
+    .filter((p) => p.addon_rank != null)
+    .sort((a, b) => Number(a.addon_rank) - Number(b.addon_rank));
+  const suggestions = (curatedAddons.length ? curatedAddons : pool)
+    .filter((p) => !inCart(p.id))
+    .slice(0, 10);
+
+  // Deal store: seller-queued products with an extra discounted price.
+  const deals = pool
+    .filter((p) => p.deal_rank != null)
+    .sort((a, b) => Number(a.deal_rank) - Number(b.deal_rank))
+    .map((p) => {
+      const base = Number(p.price);
+      const dealPrice = p.deal_price != null ? Number(p.deal_price) : base;
+      const strike = p.mrp && Number(p.mrp) > dealPrice ? Number(p.mrp) : base;
+      const off = strike > dealPrice ? Math.round(((strike - dealPrice) / strike) * 100) : 0;
+      return { p, dealPrice, strike, off };
+    })
+    .filter((d) => !inCart(d.p.id))
+    .slice(0, 12);
+
+  const addProduct = (
+    p: (typeof pool)[number],
+    price: number,
+    strike?: number | null,
+  ) => {
+    add({
+      productId: p.id,
+      code: p.code,
+      name: p.name,
+      nameTa: p.name_ta,
+      price,
+      mrp: strike && strike > price ? strike : p.mrp ? Number(p.mrp) : null,
+      categorySlug: null,
+      imageUrl: p.image_url,
+    });
+    track("add_to_cart", { productId: p.id, productName: p.name, qty: 1, value: price });
+    toast.success(`${p.name} added`);
+  };
+
 
 
   const applyCoupon = (raw: string) => {
@@ -336,52 +377,48 @@ function EnquiryPage() {
               </div>
             )}
 
-            {suggestions.length > 0 && (
-              <div className="mt-4 rounded-2xl border border-border bg-card p-5">
-                <h2 className="text-lg font-semibold">Popular add-ons</h2>
-                <p className="text-xs text-muted-foreground">
-                  Customers usually add these to complete their Diwali box.
-                </p>
-                <div className="-mx-1 mt-3 flex gap-3 overflow-x-auto px-1 pb-1">
-                  {suggestions.map((p) => (
+            {deals.length > 0 && (
+              <div className="mt-4 overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-background p-4">
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                    Deal store
+                  </span>
+                  <p className="text-xs text-muted-foreground">Extra discounted, limited stock</p>
+                </div>
+                <div className="-mx-1 mt-3 flex gap-2.5 overflow-x-auto px-1 pb-1">
+                  {deals.map(({ p, dealPrice, strike, off }) => (
                     <div
                       key={p.id}
-                      className="w-36 shrink-0 rounded-xl border border-border p-2"
+                      className="relative w-28 shrink-0 rounded-xl border border-amber-200 bg-card p-1.5"
                     >
+                      {off > 0 && (
+                        <span className="absolute left-1.5 top-1.5 z-10 rounded-md bg-amber-500 px-1 py-0.5 text-[9px] font-bold text-white">
+                          {off}% OFF
+                        </span>
+                      )}
                       <img
                         src={p.image_url || categoryImage(null)}
                         alt={p.name}
                         loading="lazy"
-                        width={200}
-                        height={120}
-                        className="h-20 w-full rounded-lg object-cover"
+                        width={160}
+                        height={96}
+                        className="h-16 w-full rounded-lg object-cover"
                       />
-                      <p className="mt-2 line-clamp-2 text-xs font-medium leading-tight">
+                      <p className="mt-1.5 line-clamp-2 text-[11px] font-medium leading-tight">
                         {pick(lang, p.name, p.name_ta)}
                       </p>
-                      <p className="mt-1 text-sm font-semibold">{inr(Number(p.price))}</p>
+                      <p className="mt-0.5 text-xs font-semibold">
+                        {inr(dealPrice)}
+                        {strike > dealPrice && (
+                          <span className="ml-1 text-[10px] font-normal text-muted-foreground line-through">
+                            {inr(strike)}
+                          </span>
+                        )}
+                      </p>
                       <Button
                         size="sm"
-                        variant="secondary"
-                        className="mt-2 w-full"
-                        onClick={() => {
-                          add({
-                            productId: p.id,
-                            code: p.code,
-                            name: p.name,
-                            nameTa: p.name_ta,
-                            price: Number(p.price),
-                            mrp: p.mrp ? Number(p.mrp) : null,
-                            categorySlug: null,
-                            imageUrl: p.image_url,
-                          });
-                          track("add_to_cart", {
-                            productId: p.id,
-                            productName: p.name,
-                            qty: 1,
-                            value: Number(p.price),
-                          });
-                        }}
+                        className="mt-1.5 h-7 w-full text-[11px]"
+                        onClick={() => addProduct(p, dealPrice, strike)}
                       >
                         {t("add")}
                       </Button>
@@ -390,6 +427,42 @@ function EnquiryPage() {
                 </div>
               </div>
             )}
+
+            {suggestions.length > 0 && (
+              <div className="mt-4 rounded-2xl border border-border bg-card p-4">
+                <h2 className="text-base font-semibold">Popular add-ons</h2>
+                <p className="text-[11px] text-muted-foreground">
+                  Customers usually add these to complete their Diwali box.
+                </p>
+                <div className="-mx-1 mt-3 flex gap-2.5 overflow-x-auto px-1 pb-1">
+                  {suggestions.map((p) => (
+                    <div key={p.id} className="w-24 shrink-0 rounded-xl border border-border p-1.5">
+                      <img
+                        src={p.image_url || categoryImage(null)}
+                        alt={p.name}
+                        loading="lazy"
+                        width={160}
+                        height={96}
+                        className="h-14 w-full rounded-lg object-cover"
+                      />
+                      <p className="mt-1.5 line-clamp-2 text-[11px] font-medium leading-tight">
+                        {pick(lang, p.name, p.name_ta)}
+                      </p>
+                      <p className="mt-0.5 text-xs font-semibold">{inr(Number(p.price))}</p>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="mt-1.5 h-7 w-full text-[11px]"
+                        onClick={() => addProduct(p, Number(p.price))}
+                      >
+                        {t("add")}
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
 
             <div className="mt-4 rounded-2xl border border-border bg-card p-5">
               <h2 className="flex items-center gap-2 text-lg font-semibold">
@@ -525,7 +598,7 @@ function EnquiryPage() {
               <LegalNotice compact />
             </div>
 
-            <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 border-t border-border bg-background/95 p-3 backdrop-blur md:bottom-0">
+            <div className="fixed inset-x-0 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-30 border-t border-border bg-background/95 p-3 backdrop-blur md:bottom-0">
               <div className="mx-auto flex w-full max-w-3xl items-center gap-3">
                 <div className="min-w-0">
                   <p className="text-xs text-muted-foreground">{count} items</p>

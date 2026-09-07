@@ -1,5 +1,14 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Gift, LayoutDashboard, ListChecks, LogOut, Package, Tags, TicketPercent } from "lucide-react";
+import {
+  BarChart3,
+  Gift,
+  LayoutDashboard,
+  ListChecks,
+  LogOut,
+  Package,
+  Tags,
+  TicketPercent,
+} from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -9,11 +18,13 @@ import { SHOP } from "@/lib/shop";
 const LINKS = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/enquiries", label: "Enquiries", icon: ListChecks },
+  { to: "/reports", label: "Reports", icon: BarChart3 },
   { to: "/products", label: "Products", icon: Package },
   { to: "/categories", label: "Categories", icon: Tags },
   { to: "/manage-combos", label: "Combos", icon: Gift },
   { to: "/coupons", label: "Coupons", icon: TicketPercent },
 ] as const;
+
 
 export function AdminShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();

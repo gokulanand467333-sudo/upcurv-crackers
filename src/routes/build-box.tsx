@@ -260,7 +260,7 @@ function BuildBox() {
 
       {/* Sticky footer */}
       {!loading && (
-        <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-40 border-t border-border bg-background/95 backdrop-blur md:bottom-0">
+        <div className="fixed inset-x-0 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-40 border-t border-border bg-background/95 backdrop-blur md:bottom-0">
           <div className="mx-auto w-full max-w-3xl px-4 py-3">
             <div className="flex items-center justify-between text-xs">
               <span className="font-medium">

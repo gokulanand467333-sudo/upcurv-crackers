@@ -62,6 +62,9 @@ type Draft = {
   image_url: string;
   tags: string[];
   active: boolean;
+  addon_rank: string;
+  deal_rank: string;
+  deal_price: string;
 };
 
 const emptyDraft = (): Draft => ({
@@ -76,6 +79,9 @@ const emptyDraft = (): Draft => ({
   image_url: "",
   tags: [],
   active: true,
+  addon_rank: "",
+  deal_rank: "",
+  deal_price: "",
 });
 
 const toDraft = (p: Product): Draft => ({
@@ -91,7 +97,11 @@ const toDraft = (p: Product): Draft => ({
   image_url: p.image_url ?? "",
   tags: p.tags ?? [],
   active: p.active,
+  addon_rank: p.addon_rank == null ? "" : String(p.addon_rank),
+  deal_rank: p.deal_rank == null ? "" : String(p.deal_rank),
+  deal_price: p.deal_price == null ? "" : String(p.deal_price),
 });
+
 
 function ProductsAdmin() {
   const qc = useQueryClient();
@@ -127,6 +137,10 @@ function ProductsAdmin() {
         image_url: d.image_url.trim() || null,
         tags: d.tags,
         active: d.active,
+        addon_rank: d.addon_rank === "" ? null : Number(d.addon_rank),
+        deal_rank: d.deal_rank === "" ? null : Number(d.deal_rank),
+        deal_price: d.deal_price === "" ? null : Number(d.deal_price),
+
       };
       const res = d.id
         ? await supabase.from("products").update(payload).eq("id", d.id)
@@ -352,6 +366,46 @@ function ProductsAdmin() {
                   onChange={(e) => setDraft({ ...draft, image_url: e.target.value })}
                 />
               </div>
+              <div className="rounded-xl border border-border p-3 sm:col-span-2">
+                <p className="text-sm font-semibold">Enquiry page placement</p>
+                <p className="text-xs text-muted-foreground">
+                  Leave a position blank to hide the product from that strip. Lower number appears
+                  first.
+                </p>
+                <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                  <div className="space-y-1.5">
+                    <Label>Add-on position</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      placeholder="—"
+                      value={draft.addon_rank}
+                      onChange={(e) => setDraft({ ...draft, addon_rank: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Deal position</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      placeholder="—"
+                      value={draft.deal_rank}
+                      onChange={(e) => setDraft({ ...draft, deal_rank: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Deal price</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      placeholder="—"
+                      value={draft.deal_price}
+                      onChange={(e) => setDraft({ ...draft, deal_price: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div className="space-y-1.5 sm:col-span-2">
                 <Label>Tags</Label>
                 <div className="flex flex-wrap gap-2">
