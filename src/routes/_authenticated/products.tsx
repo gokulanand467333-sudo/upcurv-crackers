@@ -62,6 +62,9 @@ type Draft = {
   image_url: string;
   tags: string[];
   active: boolean;
+  addon_rank: string;
+  deal_rank: string;
+  deal_price: string;
 };
 
 const emptyDraft = (): Draft => ({
@@ -76,6 +79,9 @@ const emptyDraft = (): Draft => ({
   image_url: "",
   tags: [],
   active: true,
+  addon_rank: "",
+  deal_rank: "",
+  deal_price: "",
 });
 
 const toDraft = (p: Product): Draft => ({
@@ -91,7 +97,11 @@ const toDraft = (p: Product): Draft => ({
   image_url: p.image_url ?? "",
   tags: p.tags ?? [],
   active: p.active,
+  addon_rank: p.addon_rank == null ? "" : String(p.addon_rank),
+  deal_rank: p.deal_rank == null ? "" : String(p.deal_rank),
+  deal_price: p.deal_price == null ? "" : String(p.deal_price),
 });
+
 
 function ProductsAdmin() {
   const qc = useQueryClient();
