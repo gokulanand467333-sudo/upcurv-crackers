@@ -242,8 +242,9 @@ export function SiteShell({
         </footer>
       )}
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
-        <div className="grid h-16 grid-cols-5">
+      <nav className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(env(safe-area-inset-bottom)+0.6rem)] md:hidden">
+        <div className="grid h-16 grid-cols-5 rounded-[26px] border border-border/60 bg-background/70 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.35)] backdrop-blur-xl backdrop-saturate-150">
+
           {TABS.map((tab) => (
             <Link
               key={tab.to}
