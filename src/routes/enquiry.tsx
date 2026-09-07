@@ -103,9 +103,50 @@ function EnquiryPage() {
   })();
 
   const products = useQuery(productsQuery);
-  const suggestions = (products.data ?? [])
-    .filter((p) => p.availability !== "unavailable" && !items.some((i) => i.productId === p.id))
-    .slice(0, 8);
+  const inCart = (id: string) => items.some((i) => i.productId === id);
+  const pool = (products.data ?? []).filter((p) => p.availability !== "unavailable");
+
+  // Seller-curated add-on strip (ordered by the position set in the seller desk).
+  const curatedAddons = pool
+    .filter((p) => p.addon_rank != null)
+    .sort((a, b) => Number(a.addon_rank) - Number(b.addon_rank));
+  const suggestions = (curatedAddons.length ? curatedAddons : pool)
+    .filter((p) => !inCart(p.id))
+    .slice(0, 10);
+
+  // Deal store: seller-queued products with an extra discounted price.
+  const deals = pool
+    .filter((p) => p.deal_rank != null)
+    .sort((a, b) => Number(a.deal_rank) - Number(b.deal_rank))
+    .map((p) => {
+      const base = Number(p.price);
+      const dealPrice = p.deal_price != null ? Number(p.deal_price) : base;
+      const strike = p.mrp && Number(p.mrp) > dealPrice ? Number(p.mrp) : base;
+      const off = strike > dealPrice ? Math.round(((strike - dealPrice) / strike) * 100) : 0;
+      return { p, dealPrice, strike, off };
+    })
+    .filter((d) => !inCart(d.p.id))
+    .slice(0, 12);
+
+  const addProduct = (
+    p: (typeof pool)[number],
+    price: number,
+    strike?: number | null,
+  ) => {
+    add({
+      productId: p.id,
+      code: p.code,
+      name: p.name,
+      nameTa: p.name_ta,
+      price,
+      mrp: strike && strike > price ? strike : p.mrp ? Number(p.mrp) : null,
+      categorySlug: null,
+      imageUrl: p.image_url,
+    });
+    track("add_to_cart", { productId: p.id, productName: p.name, qty: 1, value: price });
+    toast.success(`${p.name} added`);
+  };
+
 
 
   const applyCoupon = (raw: string) => {
