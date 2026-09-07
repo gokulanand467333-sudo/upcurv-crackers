@@ -85,6 +85,28 @@ function EnquiryPage() {
   const couponOff = appliedCoupon ? couponDiscount(appliedCoupon, total).discount : 0;
   const payable = Math.max(0, total - couponOff);
 
+  // Nearest coupon the customer has not unlocked yet — drives the progress nudge.
+  const nextCoupon = (() => {
+    if (appliedCoupon) return null;
+    const locked = (coupons.data ?? [])
+      .filter((c) => Number(c.min_value) > total)
+      .sort((a, b) => Number(a.min_value) - Number(b.min_value));
+    const coupon = locked[0];
+    if (!coupon) return null;
+    const min = Number(coupon.min_value);
+    return {
+      coupon,
+      gap: Math.ceil(min - total),
+      pct: Math.min(100, Math.round((total / min) * 100)),
+    };
+  })();
+
+  const products = useQuery(productsQuery);
+  const suggestions = (products.data ?? [])
+    .filter((p) => p.availability !== "unavailable" && !items.some((i) => i.productId === p.id))
+    .slice(0, 8);
+
+
   const applyCoupon = (raw: string) => {
     const code = raw.trim().toUpperCase();
     const found = (coupons.data ?? []).find((c) => c.code === code);
