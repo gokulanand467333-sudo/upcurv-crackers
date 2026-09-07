@@ -352,6 +352,46 @@ function ProductsAdmin() {
                   onChange={(e) => setDraft({ ...draft, image_url: e.target.value })}
                 />
               </div>
+              <div className="rounded-xl border border-border p-3 sm:col-span-2">
+                <p className="text-sm font-semibold">Enquiry page placement</p>
+                <p className="text-xs text-muted-foreground">
+                  Leave a position blank to hide the product from that strip. Lower number appears
+                  first.
+                </p>
+                <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                  <div className="space-y-1.5">
+                    <Label>Add-on position</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      placeholder="—"
+                      value={draft.addon_rank}
+                      onChange={(e) => setDraft({ ...draft, addon_rank: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Deal position</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      placeholder="—"
+                      value={draft.deal_rank}
+                      onChange={(e) => setDraft({ ...draft, deal_rank: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Deal price</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      placeholder="—"
+                      value={draft.deal_price}
+                      onChange={(e) => setDraft({ ...draft, deal_price: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div className="space-y-1.5 sm:col-span-2">
                 <Label>Tags</Label>
                 <div className="flex flex-wrap gap-2">
