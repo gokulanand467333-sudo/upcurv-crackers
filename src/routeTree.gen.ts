@@ -20,6 +20,7 @@ import { Route as TrackRouteImport } from './routes/track'
 import { Route as AuthenticatedCategoriesRouteImport } from './routes/_authenticated/categories'
 import { Route as AuthenticatedCouponsRouteImport } from './routes/_authenticated/coupons'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedDealsRouteImport } from './routes/_authenticated/deals'
 import { Route as AuthenticatedManageCombosRouteImport } from './routes/_authenticated/manage-combos'
 import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticated/products'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
@@ -82,6 +83,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDealsRoute = AuthenticatedDealsRouteImport.update({
+  id: '/deals',
+  path: '/deals',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedManageCombosRoute =
   AuthenticatedManageCombosRouteImport.update({
     id: '/manage-combos',
@@ -132,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/categories': typeof AuthenticatedCategoriesRoute
   '/coupons': typeof AuthenticatedCouponsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/deals': typeof AuthenticatedDealsRoute
   '/manage-combos': typeof AuthenticatedManageCombosRoute
   '/products': typeof AuthenticatedProductsRoute
   '/reports': typeof AuthenticatedReportsRoute
@@ -150,6 +157,7 @@ export interface FileRoutesByTo {
   '/categories': typeof AuthenticatedCategoriesRoute
   '/coupons': typeof AuthenticatedCouponsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/deals': typeof AuthenticatedDealsRoute
   '/manage-combos': typeof AuthenticatedManageCombosRoute
   '/products': typeof AuthenticatedProductsRoute
   '/reports': typeof AuthenticatedReportsRoute
@@ -171,6 +179,7 @@ export interface FileRoutesById {
   '/_authenticated/categories': typeof AuthenticatedCategoriesRoute
   '/_authenticated/coupons': typeof AuthenticatedCouponsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/deals': typeof AuthenticatedDealsRoute
   '/_authenticated/manage-combos': typeof AuthenticatedManageCombosRoute
   '/_authenticated/products': typeof AuthenticatedProductsRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
@@ -192,6 +201,7 @@ export interface FileRouteTypes {
     | '/categories'
     | '/coupons'
     | '/dashboard'
+    | '/deals'
     | '/manage-combos'
     | '/products'
     | '/reports'
@@ -210,6 +220,7 @@ export interface FileRouteTypes {
     | '/categories'
     | '/coupons'
     | '/dashboard'
+    | '/deals'
     | '/manage-combos'
     | '/products'
     | '/reports'
@@ -230,6 +241,7 @@ export interface FileRouteTypes {
     | '/_authenticated/categories'
     | '/_authenticated/coupons'
     | '/_authenticated/dashboard'
+    | '/_authenticated/deals'
     | '/_authenticated/manage-combos'
     | '/_authenticated/products'
     | '/_authenticated/reports'
@@ -329,6 +341,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/deals': {
+      id: '/_authenticated/deals'
+      path: '/deals'
+      fullPath: '/deals'
+      preLoaderRoute: typeof AuthenticatedDealsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/manage-combos': {
       id: '/_authenticated/manage-combos'
       path: '/manage-combos'
@@ -385,6 +404,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCategoriesRoute: typeof AuthenticatedCategoriesRoute
   AuthenticatedCouponsRoute: typeof AuthenticatedCouponsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedDealsRoute: typeof AuthenticatedDealsRoute
   AuthenticatedManageCombosRoute: typeof AuthenticatedManageCombosRoute
   AuthenticatedProductsRoute: typeof AuthenticatedProductsRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
@@ -396,6 +416,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCategoriesRoute: AuthenticatedCategoriesRoute,
   AuthenticatedCouponsRoute: AuthenticatedCouponsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedDealsRoute: AuthenticatedDealsRoute,
   AuthenticatedManageCombosRoute: AuthenticatedManageCombosRoute,
   AuthenticatedProductsRoute: AuthenticatedProductsRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
