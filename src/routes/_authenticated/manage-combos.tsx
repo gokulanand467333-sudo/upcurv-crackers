@@ -211,7 +211,9 @@ function CombosAdmin() {
           <DialogHeader>
             <DialogTitle>{itemsFor?.title} · items</DialogTitle>
           </DialogHeader>
-          {itemsFor && <ComboItems comboId={itemsFor.id} />}
+          {itemsFor && (
+            <ComboItems comboId={itemsFor.id} price={Number(itemsFor.indicative_price)} />
+          )}
         </DialogContent>
       </Dialog>
     </AdminShell>
