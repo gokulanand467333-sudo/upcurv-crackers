@@ -8,6 +8,7 @@ import {
   Package,
   Tags,
   TicketPercent,
+  Zap,
 } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -22,6 +23,7 @@ const LINKS = [
   { to: "/products", label: "Products", icon: Package },
   { to: "/categories", label: "Categories", icon: Tags },
   { to: "/manage-combos", label: "Combos", icon: Gift },
+  { to: "/deals", label: "Deal Store", icon: Zap },
   { to: "/coupons", label: "Coupons", icon: TicketPercent },
 ] as const;
 
