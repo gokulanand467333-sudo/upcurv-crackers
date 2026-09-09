@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Gift,
   Grid2x2,
@@ -10,8 +10,62 @@ import {
   Search,
   ShoppingCart,
   Sparkles,
+  X,
 } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+
+function BoxNudge() {
+  const { lang } = useLang();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const [show, setShow] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
+  const onBuilder = pathname.startsWith("/build-box");
+
+  useEffect(() => {
+    if (onBuilder || dismissed) return;
+    let hide: ReturnType<typeof setTimeout>;
+    const cycle = () => {
+      setShow(true);
+      hide = setTimeout(() => setShow(false), 7000);
+    };
+    const first = setTimeout(cycle, 6000);
+    const timer = setInterval(cycle, 30000);
+    return () => {
+      clearTimeout(first);
+      clearTimeout(hide);
+      clearInterval(timer);
+    };
+  }, [onBuilder, dismissed]);
+
+  if (onBuilder || dismissed || !show) return null;
+
+  return (
+    <div className="fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+5.4rem)] z-40 animate-fade-in md:hidden">
+      <div className="flex items-center gap-3 rounded-2xl border border-primary/25 bg-background/95 p-3 shadow-[0_12px_30px_-14px_rgba(0,0,0,0.45)] backdrop-blur-xl">
+        <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+          <Sparkles className="size-5" />
+        </span>
+        <Link to="/build-box" className="min-w-0 flex-1" onClick={() => setShow(false)}>
+          <p className="truncate text-sm font-semibold">
+            {lang === "ta" ? "உங்கள் பெட்டியை உருவாக்குங்கள்" : "Build your own box now"}
+          </p>
+          <p className="truncate text-xs text-muted-foreground">
+            {lang === "ta"
+              ? "பட்ஜெட்டுக்கு ஏற்ப தேர்வு செய்யுங்கள்"
+              : "Pick by budget, category by category"}
+          </p>
+        </Link>
+        <button
+          aria-label="Dismiss"
+          className="shrink-0 rounded-full p-1 text-muted-foreground"
+          onClick={() => setDismissed(true)}
+        >
+          <X className="size-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -241,6 +295,8 @@ export function SiteShell({
           </div>
         </footer>
       )}
+
+      <BoxNudge />
 
       <nav className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(env(safe-area-inset-bottom)+0.6rem)] md:hidden">
         <div className="grid h-16 grid-cols-5 rounded-[26px] border border-border/60 bg-background/70 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.35)] backdrop-blur-xl backdrop-saturate-150">

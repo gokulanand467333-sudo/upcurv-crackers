@@ -211,22 +211,37 @@ function CombosAdmin() {
           <DialogHeader>
             <DialogTitle>{itemsFor?.title} · items</DialogTitle>
           </DialogHeader>
-          {itemsFor && <ComboItems comboId={itemsFor.id} />}
+          {itemsFor && (
+            <ComboItems comboId={itemsFor.id} price={Number(itemsFor.indicative_price)} />
+          )}
         </DialogContent>
       </Dialog>
     </AdminShell>
   );
 }
 
-function ComboItems({ comboId }: { comboId: string }) {
+function ComboItems({ comboId, price }: { comboId: string; price: number }) {
   const qc = useQueryClient();
-  const [productId, setProductId] = useState("");
-  const [qty, setQty] = useState(1);
+  const [categoryId, setCategoryId] = useState("");
+  const [search, setSearch] = useState("");
+
+  const categories = useQuery({
+    queryKey: ["admin", "categories", "min"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("categories").select("id,name").order("sort");
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const products = useQuery({
-    queryKey: ["admin", "products", "min"],
+    queryKey: ["admin", "products", "builder"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("products").select("id,name").order("name");
+      const { data, error } = await supabase
+        .from("products")
+        .select("id,name,code,price,mrp,category_id")
+        .eq("active", true)
+        .order("name");
       if (error) throw error;
       return data;
     },
@@ -237,7 +252,7 @@ function ComboItems({ comboId }: { comboId: string }) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("combo_items")
-        .select("id,qty,product_id,products(name)")
+        .select("id,qty,product_id,products(name,code,price,mrp)")
         .eq("combo_id", comboId);
       if (error) throw error;
       return data;
@@ -249,72 +264,153 @@ function ComboItems({ comboId }: { comboId: string }) {
     qc.invalidateQueries({ queryKey: ["combos"] });
   };
 
-  const add = useMutation({
-    mutationFn: async () => {
-      if (!productId) throw new Error("Pick a product");
+  const upsert = useMutation({
+    mutationFn: async (v: { productId: string; qty: number; id?: string }) => {
+      if (v.id) {
+        const { error } =
+          v.qty <= 0
+            ? await supabase.from("combo_items").delete().eq("id", v.id)
+            : await supabase.from("combo_items").update({ qty: v.qty }).eq("id", v.id);
+        if (error) throw error;
+        return;
+      }
       const { error } = await supabase
         .from("combo_items")
-        .insert({ combo_id: comboId, product_id: productId, qty });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      setProductId("");
-      setQty(1);
-      refresh();
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const del = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("combo_items").delete().eq("id", id);
+        .insert({ combo_id: comboId, product_id: v.productId, qty: v.qty });
       if (error) throw error;
     },
     onSuccess: refresh,
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const list = items.data ?? [];
+  const byProduct = new Map(list.map((it) => [it.product_id, it]));
+
+  const actualValue = list.reduce(
+    (s, it) => s + Number(it.products?.mrp ?? it.products?.price ?? 0) * it.qty,
+    0,
+  );
+  const listValue = list.reduce((s, it) => s + Number(it.products?.price ?? 0) * it.qty, 0);
+  const saved = actualValue - price;
+  const savedPct = actualValue > 0 ? Math.round((saved / actualValue) * 100) : 0;
+
+  const pool = (products.data ?? [])
+    .filter((p) => (categoryId ? p.category_id === categoryId : true))
+    .filter((p) =>
+      search ? `${p.name} ${p.code}`.toLowerCase().includes(search.toLowerCase()) : true,
+    )
+    .slice(0, 60);
+
   return (
     <div className="space-y-3">
+      <div className="rounded-xl border border-border bg-secondary/40 p-3 text-sm">
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Items total (actual value)</span>
+          <span className="font-semibold">{inr(actualValue)}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Sum of selling prices</span>
+          <span>{inr(listValue)}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Combo price</span>
+          <span className="font-semibold text-primary">{inr(price)}</span>
+        </div>
+        <div className="mt-1 flex justify-between border-t border-border pt-1">
+          <span className="text-muted-foreground">Customer saves</span>
+          <span className={saved > 0 ? "font-semibold text-emerald-600" : "text-destructive"}>
+            {inr(Math.max(0, saved))} {saved > 0 ? `· ${savedPct}%` : ""}
+          </span>
+        </div>
+      </div>
+
       <div className="divide-y divide-border rounded-xl border border-border">
         {items.isLoading && <div className="shimmer h-12 w-full" />}
-        {(items.data ?? []).map((it) => (
+        {list.map((it) => (
           <div key={it.id} className="flex items-center gap-2 p-2 text-sm">
             <span className="min-w-0 flex-1 truncate">{it.products?.name ?? it.product_id}</span>
-            <span className="text-muted-foreground">×{it.qty}</span>
-            <Button variant="ghost" size="icon" onClick={() => del.mutate(it.id)}>
+            <span className="text-xs text-muted-foreground">
+              {inr(Number(it.products?.price ?? 0) * it.qty)}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => upsert.mutate({ productId: it.product_id, qty: it.qty - 1, id: it.id })}
+            >
+              −
+            </Button>
+            <span className="w-5 text-center font-semibold">{it.qty}</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => upsert.mutate({ productId: it.product_id, qty: it.qty + 1, id: it.id })}
+            >
+              +
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => upsert.mutate({ productId: it.product_id, qty: 0, id: it.id })}
+            >
               <Trash2 className="size-4" />
             </Button>
           </div>
         ))}
-        {!items.isLoading && (items.data ?? []).length === 0 && (
+        {!items.isLoading && list.length === 0 && (
           <p className="p-3 text-center text-xs text-muted-foreground">No items yet</p>
         )}
       </div>
 
-      <div className="flex gap-2">
-        <select
-          className="h-10 min-w-0 flex-1 rounded-md border border-input bg-background px-2 text-sm"
-          value={productId}
-          onChange={(e) => setProductId(e.target.value)}
-        >
-          <option value="">Select product…</option>
-          {(products.data ?? []).map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-        <Input
-          type="number"
-          min={1}
-          className="w-20"
-          value={qty}
-          onChange={(e) => setQty(Number(e.target.value))}
-        />
-        <Button onClick={() => add.mutate()} disabled={add.isPending}>
-          Add
-        </Button>
+      <div className="space-y-2 rounded-xl border border-border p-2">
+        <p className="text-xs font-semibold text-muted-foreground">Add products by category</p>
+        <div className="flex gap-2">
+          <select
+            className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-2 text-sm"
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+          >
+            <option value="">All categories</option>
+            {(categories.data ?? []).map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+          <Input
+            className="h-9 w-32"
+            placeholder="Search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <div className="max-h-56 space-y-1 overflow-y-auto">
+          {pool.map((p) => {
+            const existing = byProduct.get(p.id);
+            return (
+              <button
+                key={p.id}
+                className="flex w-full items-center gap-2 rounded-lg border border-border p-2 text-left text-sm hover:bg-accent"
+                onClick={() =>
+                  upsert.mutate({
+                    productId: p.id,
+                    qty: (existing?.qty ?? 0) + 1,
+                    ...(existing ? { id: existing.id } : {}),
+                  })
+                }
+              >
+                <span className="min-w-0 flex-1 truncate">{p.name}</span>
+                <span className="text-xs text-muted-foreground">{inr(Number(p.price))}</span>
+                {existing && (
+                  <span className="text-xs font-semibold text-primary">×{existing.qty}</span>
+                )}
+                <Plus className="size-4 shrink-0" />
+              </button>
+            );
+          })}
+          {pool.length === 0 && (
+            <p className="p-3 text-center text-xs text-muted-foreground">No products</p>
+          )}
+        </div>
       </div>
     </div>
   );
