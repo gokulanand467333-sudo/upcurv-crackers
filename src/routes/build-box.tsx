@@ -192,7 +192,20 @@ function BuildBox() {
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
                       {p.code}
-                      {p.pack ? ` · ${p.pack}` : ""} · {inr(p.price)}
+                      {p.pack ? ` · ${p.pack}` : ""}
+                    </p>
+                    <p className="mt-0.5 flex items-baseline gap-1.5">
+                      <span className="text-sm font-bold text-primary">{inr(p.price)}</span>
+                      {p.mrp && Number(p.mrp) > Number(p.price) && (
+                        <>
+                          <span className="text-[11px] text-muted-foreground line-through">
+                            {inr(Number(p.mrp))}
+                          </span>
+                          <span className="text-[10px] font-semibold text-emerald-600">
+                            {Math.round((1 - Number(p.price) / Number(p.mrp)) * 100)}% off
+                          </span>
+                        </>
+                      )}
                     </p>
                   </div>
                   {qty > 0 ? (
