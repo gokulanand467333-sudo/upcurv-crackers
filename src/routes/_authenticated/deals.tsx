@@ -118,10 +118,10 @@ function DealsAdmin() {
         {products.isLoading &&
           Array.from({ length: 4 }).map((_, i) => <div key={i} className="shimmer h-16 w-full" />)}
         {deals.map((p, i) => {
-          const base = Number(p.price);
-          const dp = p.deal_price == null ? base : Number(p.deal_price);
-          const strike = p.mrp && Number(p.mrp) > dp ? Number(p.mrp) : base;
-          const off = strike > dp ? Math.round(((strike - dp) / strike) * 100) : 0;
+          const sellingPrice = Number(p.price);
+          const mrp = p.mrp == null ? sellingPrice : Number(p.mrp);
+          const dp = p.deal_price == null ? sellingPrice : Number(p.deal_price);
+          const off = mrp > dp ? Math.round(((mrp - dp) / mrp) * 100) : 0;
           return (
             <div key={p.id} className="flex items-center gap-3 p-3">
               <span className="w-6 text-center text-sm font-semibold text-muted-foreground">
@@ -130,8 +130,9 @@ function DealsAdmin() {
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold">{p.name}</p>
                 <p className="text-xs text-muted-foreground">
-                  {p.code} · <span className="font-semibold text-primary">{inr(dp)}</span>{" "}
-                  {strike > dp && <span className="line-through">{inr(strike)}</span>}{" "}
+                  {p.code} · <span className="line-through">MRP {inr(mrp)}</span>{" "}
+                  <span className="line-through">Sale {inr(sellingPrice)}</span>{" "}
+                  <span className="font-semibold text-primary">Deal {inr(dp)}</span>{" "}
                   {off > 0 && <span className="text-emerald-600">{off}% off</span>}
                 </p>
               </div>
