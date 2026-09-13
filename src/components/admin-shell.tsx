@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   BarChart3,
   Gift,
@@ -13,6 +13,22 @@ import {
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarRail,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { SHOP } from "@/lib/shop";
 
@@ -30,39 +46,82 @@ const LINKS = [
 
 export function AdminShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
+  const currentPath = useRouterState({ select: (router) => router.location.pathname });
 
   return (
-    <div className="min-h-screen bg-secondary/30">
-      <header className="border-b border-border bg-background">
-        <div className="mx-auto flex h-14 w-full max-w-7xl items-center gap-3 px-4">
-          <span className="font-display text-sm font-semibold">{SHOP.name} · Seller desk</span>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="ml-auto"
-            onClick={async () => {
-              await supabase.auth.signOut();
-              navigate({ to: "/auth" });
-            }}
-          >
-            <LogOut className="size-4" /> Sign out
-          </Button>
-        </div>
-        <nav className="mx-auto flex w-full max-w-7xl gap-1 overflow-x-auto px-4 pb-2">
-          {LINKS.map((l) => (
-            <Link
-              key={l.to}
-              to={l.to}
-              activeProps={{ className: "bg-primary text-primary-foreground" }}
-              className="flex shrink-0 items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-accent"
-            >
-              <l.icon className="size-4" />
-              {l.label}
-            </Link>
-          ))}
-        </nav>
-      </header>
-      <main className="mx-auto w-full max-w-7xl px-4 py-6">{children}</main>
-    </div>
+    <SidebarProvider>
+      <Sidebar collapsible="icon" className="border-sidebar-border">
+        <SidebarHeader className="border-b border-sidebar-border p-3">
+          <div className="flex h-10 items-center gap-3 overflow-hidden px-1">
+            <div className="grid size-8 shrink-0 place-items-center rounded-md bg-sidebar-primary text-sm font-bold text-sidebar-primary-foreground">
+              U
+            </div>
+            <div className="min-w-0 group-data-[collapsible=icon]:hidden">
+              <p className="truncate text-sm font-semibold">{SHOP.name}</p>
+              <p className="text-[11px] text-muted-foreground">Seller desk</p>
+            </div>
+          </div>
+        </SidebarHeader>
+        <SidebarContent className="py-2">
+          <SidebarGroup>
+            <SidebarGroupLabel>Workspace</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {LINKS.map((item) => {
+                  const active =
+                    currentPath === item.to ||
+                    (item.to === "/enquiries" && currentPath.startsWith("/enquiries/"));
+                  return (
+                    <SidebarMenuItem key={item.to}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={active}
+                        tooltip={item.label}
+                        className="h-9"
+                      >
+                        <Link to={item.to}>
+                          <item.icon />
+                          <span>{item.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+        <SidebarFooter className="border-t border-sidebar-border p-3">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                tooltip="Sign out"
+                onClick={async () => {
+                  await supabase.auth.signOut();
+                  navigate({ to: "/auth" });
+                }}
+              >
+                <LogOut />
+                <span>Sign out</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarFooter>
+        <SidebarRail />
+      </Sidebar>
+
+      <SidebarInset className="min-w-0 bg-muted/40">
+        <header className="sticky top-0 z-20 flex h-14 items-center border-b border-border bg-background/90 px-4 backdrop-blur-md">
+          <SidebarTrigger className="size-8" />
+          <div className="ml-3 min-w-0">
+            <p className="truncate text-sm font-semibold">Seller desk</p>
+            <p className="hidden text-[11px] text-muted-foreground sm:block">
+              Catalogue, enquiries and performance
+            </p>
+          </div>
+        </header>
+        <main className="w-full min-w-0 px-4 py-5 sm:px-6 lg:px-8 lg:py-7">{children}</main>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

@@ -119,11 +119,11 @@ function EnquiryPage() {
     .filter((p) => p.deal_rank != null)
     .sort((a, b) => Number(a.deal_rank) - Number(b.deal_rank))
     .map((p) => {
-      const base = Number(p.price);
-      const dealPrice = p.deal_price != null ? Number(p.deal_price) : base;
-      const strike = p.mrp && Number(p.mrp) > dealPrice ? Number(p.mrp) : base;
-      const off = strike > dealPrice ? Math.round(((strike - dealPrice) / strike) * 100) : 0;
-      return { p, dealPrice, strike, off };
+      const sellingPrice = Number(p.price);
+      const mrp = p.mrp == null ? sellingPrice : Number(p.mrp);
+      const dealPrice = p.deal_price != null ? Number(p.deal_price) : sellingPrice;
+      const off = mrp > dealPrice ? Math.round(((mrp - dealPrice) / mrp) * 100) : 0;
+      return { p, dealPrice, sellingPrice, mrp, off };
     })
     .filter((d) => !inCart(d.p.id))
     .slice(0, 12);
@@ -386,7 +386,7 @@ function EnquiryPage() {
                   <p className="text-xs text-muted-foreground">Extra discounted, limited stock</p>
                 </div>
                 <div className="-mx-1 mt-3 flex gap-2.5 overflow-x-auto px-1 pb-1">
-                  {deals.map(({ p, dealPrice, strike, off }) => (
+                  {deals.map(({ p, dealPrice, sellingPrice, mrp, off }) => (
                     <div
                       key={p.id}
                       className="relative w-28 shrink-0 rounded-xl border border-amber-200 bg-card p-1.5"
@@ -407,18 +407,17 @@ function EnquiryPage() {
                       <p className="mt-1.5 line-clamp-2 text-[11px] font-medium leading-tight">
                         {pick(lang, p.name, p.name_ta)}
                       </p>
-                      <p className="mt-0.5 text-xs font-semibold">
+                      <p className="mt-1 text-[10px] text-muted-foreground">
+                        <span className="line-through">MRP {inr(mrp)}</span>
+                        <span className="ml-1 line-through">Sale {inr(sellingPrice)}</span>
+                      </p>
+                      <p className="mt-0.5 text-sm font-bold text-primary">
                         {inr(dealPrice)}
-                        {strike > dealPrice && (
-                          <span className="ml-1 text-[10px] font-normal text-muted-foreground line-through">
-                            {inr(strike)}
-                          </span>
-                        )}
                       </p>
                       <Button
                         size="sm"
                         className="mt-1.5 h-7 w-full text-[11px]"
-                        onClick={() => addProduct(p, dealPrice, strike)}
+                        onClick={() => addProduct(p, dealPrice, mrp)}
                       >
                         {t("add")}
                       </Button>

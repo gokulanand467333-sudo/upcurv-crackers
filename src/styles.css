@@ -64,6 +64,11 @@
   --color-brand: var(--brand);
   --color-brand-soft: var(--brand-soft);
   --color-ink: var(--ink);
+  --color-report-blue: var(--report-blue);
+  --color-report-teal: var(--report-teal);
+  --color-report-green: var(--report-green);
+  --color-report-violet: var(--report-violet);
+  --color-report-rose: var(--report-rose);
 }
 
 :root {
@@ -90,19 +95,24 @@
   --brand: oklch(0.64 0.19 42);
   --brand-soft: oklch(0.97 0.03 78);
   --ink: oklch(0.22 0.02 60);
-  --chart-1: oklch(0.64 0.19 42);
-  --chart-2: oklch(0.75 0.15 80);
-  --chart-3: oklch(0.55 0.11 200);
-  --chart-4: oklch(0.68 0.14 150);
-  --chart-5: oklch(0.52 0.16 320);
-  --sidebar: oklch(0.99 0.008 80);
-  --sidebar-foreground: oklch(0.22 0.02 60);
-  --sidebar-primary: oklch(0.64 0.19 42);
-  --sidebar-primary-foreground: oklch(0.99 0.01 80);
-  --sidebar-accent: oklch(0.96 0.03 85);
-  --sidebar-accent-foreground: oklch(0.32 0.07 55);
-  --sidebar-border: oklch(0.92 0.008 75);
-  --sidebar-ring: oklch(0.64 0.19 42);
+  --chart-1: oklch(0.59 0.19 252);
+  --chart-2: oklch(0.65 0.14 190);
+  --chart-3: oklch(0.66 0.16 145);
+  --chart-4: oklch(0.61 0.18 300);
+  --chart-5: oklch(0.63 0.2 20);
+  --report-blue: oklch(0.59 0.19 252);
+  --report-teal: oklch(0.65 0.14 190);
+  --report-green: oklch(0.66 0.16 145);
+  --report-violet: oklch(0.61 0.18 300);
+  --report-rose: oklch(0.63 0.2 20);
+  --sidebar: oklch(0.985 0.006 255);
+  --sidebar-foreground: oklch(0.27 0.025 255);
+  --sidebar-primary: oklch(0.56 0.16 252);
+  --sidebar-primary-foreground: oklch(0.99 0.005 255);
+  --sidebar-accent: oklch(0.94 0.025 250);
+  --sidebar-accent-foreground: oklch(0.42 0.12 252);
+  --sidebar-border: oklch(0.9 0.015 255);
+  --sidebar-ring: oklch(0.56 0.16 252);
 }
 
 .dark {
@@ -130,6 +140,11 @@
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
+  --report-blue: oklch(0.67 0.18 252);
+  --report-teal: oklch(0.72 0.14 190);
+  --report-green: oklch(0.72 0.16 145);
+  --report-violet: oklch(0.7 0.18 300);
+  --report-rose: oklch(0.7 0.19 20);
   --sidebar: oklch(0.208 0.042 265.755);
   --sidebar-foreground: oklch(0.984 0.003 247.858);
   --sidebar-primary: oklch(0.488 0.243 264.376);
