@@ -27,6 +27,7 @@ import { Route as AuthenticatedManageCombosRouteImport } from './routes/_authent
 import { Route as AuthenticatedNewEnquiryRouteImport } from './routes/_authenticated/new-enquiry'
 import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticated/products'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as CombosIndexRouteImport } from './routes/combos.index'
 import { Route as CombosSlugRouteImport } from './routes/combos.$slug'
 import { Route as AuthenticatedEnquiriesIndexRouteImport } from './routes/_authenticated/enquiries.index'
@@ -122,6 +123,11 @@ const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const CombosIndexRoute = CombosIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -163,6 +169,7 @@ export interface FileRoutesByFullPath {
   '/new-enquiry': typeof AuthenticatedNewEnquiryRoute
   '/products': typeof AuthenticatedProductsRoute
   '/reports': typeof AuthenticatedReportsRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/combos/$slug': typeof CombosSlugRoute
   '/combos/': typeof CombosIndexRoute
   '/enquiries/$id': typeof AuthenticatedEnquiriesIdRoute
@@ -185,6 +192,7 @@ export interface FileRoutesByTo {
   '/new-enquiry': typeof AuthenticatedNewEnquiryRoute
   '/products': typeof AuthenticatedProductsRoute
   '/reports': typeof AuthenticatedReportsRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/combos/$slug': typeof CombosSlugRoute
   '/combos': typeof CombosIndexRoute
   '/enquiries/$id': typeof AuthenticatedEnquiriesIdRoute
@@ -210,6 +218,7 @@ export interface FileRoutesById {
   '/_authenticated/new-enquiry': typeof AuthenticatedNewEnquiryRoute
   '/_authenticated/products': typeof AuthenticatedProductsRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/combos/$slug': typeof CombosSlugRoute
   '/combos/': typeof CombosIndexRoute
   '/_authenticated/enquiries/$id': typeof AuthenticatedEnquiriesIdRoute
@@ -235,6 +244,7 @@ export interface FileRouteTypes {
     | '/new-enquiry'
     | '/products'
     | '/reports'
+    | '/settings'
     | '/combos/$slug'
     | '/combos/'
     | '/enquiries/$id'
@@ -257,6 +267,7 @@ export interface FileRouteTypes {
     | '/new-enquiry'
     | '/products'
     | '/reports'
+    | '/settings'
     | '/combos/$slug'
     | '/combos'
     | '/enquiries/$id'
@@ -281,6 +292,7 @@ export interface FileRouteTypes {
     | '/_authenticated/new-enquiry'
     | '/_authenticated/products'
     | '/_authenticated/reports'
+    | '/_authenticated/settings'
     | '/combos/$slug'
     | '/combos/'
     | '/_authenticated/enquiries/$id'
@@ -426,6 +438,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReportsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/combos/': {
       id: '/combos/'
       path: '/'
@@ -468,6 +487,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedNewEnquiryRoute: typeof AuthenticatedNewEnquiryRoute
   AuthenticatedProductsRoute: typeof AuthenticatedProductsRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedEnquiriesIdRoute: typeof AuthenticatedEnquiriesIdRoute
   AuthenticatedEnquiriesIndexRoute: typeof AuthenticatedEnquiriesIndexRoute
 }
@@ -483,6 +503,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedNewEnquiryRoute: AuthenticatedNewEnquiryRoute,
   AuthenticatedProductsRoute: AuthenticatedProductsRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedEnquiriesIdRoute: AuthenticatedEnquiriesIdRoute,
   AuthenticatedEnquiriesIndexRoute: AuthenticatedEnquiriesIndexRoute,
 }

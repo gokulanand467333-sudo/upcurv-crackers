@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   BarChart3,
@@ -9,12 +10,13 @@ import {
   LogOut,
   Package,
   PlusCircle,
+  Settings,
   StickyNote,
   Tags,
   TicketPercent,
   Zap,
 } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -55,7 +57,75 @@ const CATALOGUE_LINKS = [
   { to: "/coupons", label: "Coupons", icon: TicketPercent },
 ] as const;
 
+const SETTINGS_LINKS = [
+  { to: "/guide", label: "Guide", icon: BookOpen },
+  { to: "/settings", label: "Settings", icon: Settings },
+] as const;
+
 const NOTES_KEY = "upcurv-sticky-notes";
+
+/** Count of enquiries the seller has not opened yet; chimes when a new one arrives. */
+export function useUnseenEnquiries() {
+  const previous = useRef<number | null>(null);
+  const { data } = useQuery({
+    queryKey: ["admin", "enquiries", "unseen"],
+    refetchInterval: 20000,
+    staleTime: 0,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("enquiries")
+        .select("id", { count: "exact", head: true })
+        .is("seen_at", null);
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+
+  const count = data ?? 0;
+  useEffect(() => {
+    if (previous.current !== null && count > previous.current) {
+      try {
+        const Ctx =
+          window.AudioContext ??
+          (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+        if (Ctx) {
+          const ctx = new Ctx();
+          const play = (freq: number, at: number) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = "sine";
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.0001, ctx.currentTime + at);
+            gain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + at + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + at + 0.28);
+            osc.connect(gain).connect(ctx.destination);
+            osc.start(ctx.currentTime + at);
+            osc.stop(ctx.currentTime + at + 0.3);
+          };
+          play(880, 0);
+          play(1170, 0.16);
+          setTimeout(() => void ctx.close(), 900);
+        }
+      } catch {
+        /* sound is best-effort */
+      }
+    }
+    previous.current = count;
+  }, [count]);
+
+  return count;
+}
+
+function CountDot({ count, className = "" }: { count: number; className?: string }) {
+  if (count <= 0) return null;
+  return (
+    <span
+      className={`grid min-w-[18px] place-items-center rounded-full bg-report-rose px-1 text-[10px] font-bold leading-[18px] text-white ${className}`}
+    >
+      {count > 99 ? "99+" : count}
+    </span>
+  );
+}
 
 function Clock() {
   const [now, setNow] = useState<Date | null>(null);
@@ -116,10 +186,12 @@ function NavGroup({
   label,
   items,
   currentPath,
+  badges = {},
 }: {
   label: string;
   items: readonly { to: string; label: string; icon: React.ComponentType }[];
   currentPath: string;
+  badges?: Record<string, number>;
 }) {
   return (
     <SidebarGroup>
@@ -134,8 +206,14 @@ function NavGroup({
               <SidebarMenuItem key={item.to}>
                 <SidebarMenuButton asChild isActive={active} tooltip={item.label} className="h-9">
                   <Link to={item.to}>
-                    <item.icon />
+                    <span className="relative flex shrink-0 items-center">
+                      <item.icon />
+                      {(badges[item.to] ?? 0) > 0 && (
+                        <span className="absolute -right-1 -top-1 size-2 rounded-full bg-report-rose group-data-[collapsible=icon]:block" />
+                      )}
+                    </span>
                     <span>{item.label}</span>
+                    <CountDot count={badges[item.to] ?? 0} className="ml-auto" />
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -150,6 +228,7 @@ function NavGroup({
 export function AdminShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const currentPath = useRouterState({ select: (router) => router.location.pathname });
+  const unseen = useUnseenEnquiries();
 
   return (
     <SidebarProvider>
@@ -166,13 +245,14 @@ export function AdminShell({ children }: { children: ReactNode }) {
           </div>
         </SidebarHeader>
         <SidebarContent className="py-2">
-          <NavGroup label="Workspace" items={WORK_LINKS} currentPath={currentPath} />
-          <NavGroup label="Catalogue" items={CATALOGUE_LINKS} currentPath={currentPath} />
           <NavGroup
-            label="Help"
-            items={[{ to: "/guide", label: "Guide", icon: BookOpen }]}
+            label="Workspace"
+            items={WORK_LINKS}
             currentPath={currentPath}
+            badges={{ "/enquiries": unseen }}
           />
+          <NavGroup label="Catalogue" items={CATALOGUE_LINKS} currentPath={currentPath} />
+          <NavGroup label="Help" items={SETTINGS_LINKS} currentPath={currentPath} />
         </SidebarContent>
         <SidebarFooter className="border-t border-sidebar-border p-3">
           <SidebarMenu>

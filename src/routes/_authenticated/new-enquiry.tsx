@@ -288,21 +288,10 @@ function NewEnquiry() {
                   <p className="truncate text-sm font-medium">{l.product_name}</p>
                   <p className="text-[11px] text-muted-foreground">{l.product_code}</p>
                 </div>
-                <Input
-                  type="number"
-                  min={0}
-                  className="h-8 w-24 text-right"
-                  value={l.unit_price}
-                  onChange={(e) =>
-                    setLines((prev) =>
-                      prev.map((x) =>
-                        x.product_id === l.product_id
-                          ? { ...x, unit_price: Number(e.target.value || 0) }
-                          : x,
-                      ),
-                    )
-                  }
-                />
+                {/* Price is catalogue-controlled — edit it on the Products page only. */}
+                <span className="w-24 text-right text-sm tabular-nums text-muted-foreground">
+                  {inr(l.unit_price)}
+                </span>
                 <div className="flex items-center gap-1">
                   <Button
                     size="icon"

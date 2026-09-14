@@ -10,7 +10,16 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { citiesFor, STATES, TAMIL_NADU } from "@/lib/india-locations";
+import { orderSettingsQuery } from "@/lib/settings";
 import { categoryImage, couponDiscount, couponsQuery, productsQuery } from "@/lib/catalog";
 import { track } from "@/lib/analytics";
 import { readSource, useCart } from "@/lib/enquiry-cart";
@@ -70,9 +79,13 @@ function EnquiryPage() {
   const [couponCode, setCouponCode] = useState<string | null>(null);
   const coupons = useQuery(couponsQuery);
 
+  const settings = useQuery(orderSettingsQuery);
+  const minOrder = settings.data?.min_order_value ?? 0;
+
   const [form, setForm] = useState({
     name: "",
     mobile: "",
+    state: "",
     city: "",
     address: "",
     pincode: "",
@@ -172,6 +185,7 @@ function EnquiryPage() {
           name: form.name.trim(),
           mobile: form.mobile.trim(),
           city: form.city.trim(),
+          state: form.state || null,
           address: form.address.trim() || null,
           pincode: form.pincode.trim() || null,
           fulfilment: "contact",
@@ -624,11 +638,16 @@ function EnquiryPage() {
               if (
                 !form.name.trim() ||
                 form.mobile.trim().length < 8 ||
+                !form.state ||
                 !form.city.trim() ||
                 !form.address.trim() ||
                 form.pincode.trim().length < 4
               ) {
-                toast.error("Please fill name, mobile, city, address and pincode.");
+                toast.error("Please fill name, mobile, state, city, address and pincode.");
+                return;
+              }
+              if (minOrder > 0 && total < minOrder) {
+                toast.error(`Minimum enquiry value is ${inr(minOrder)}.`);
                 return;
               }
               mutation.mutate();
@@ -653,15 +672,48 @@ function EnquiryPage() {
                 required
               />
             </div>
+            <div className="space-y-1.5">
+              <Label>State*</Label>
+              <Select
+                value={form.state}
+                onValueChange={(v) => setForm({ ...form, state: v, city: "" })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select state" />
+                </SelectTrigger>
+                <SelectContent className="max-h-72">
+                  {STATES.map((s) => (
+                    <SelectItem
+                      key={s}
+                      value={s}
+                      className={s === TAMIL_NADU ? "font-semibold text-primary" : ""}
+                    >
+                      {s}
+                      {s === TAMIL_NADU ? " ★" : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="city">City / Area*</Label>
-                <Input
-                  id="city"
+                <Label>City / Area*</Label>
+                <Select
                   value={form.city}
-                  onChange={(e) => setForm({ ...form, city: e.target.value })}
-                  required
-                />
+                  disabled={!form.state}
+                  onValueChange={(v) => setForm({ ...form, city: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={form.state ? "Select city" : "Select state first"} />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    {citiesFor(form.state).map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="pincode">Pincode*</Label>

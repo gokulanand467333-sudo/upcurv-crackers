@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          created_at: string
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          created_at?: string
+          key: string
+          updated_at?: string
+          value?: Json
+        }
+        Update: {
+          created_at?: string
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           created_at: string
@@ -186,7 +207,9 @@ export type Database = {
           name: string
           pincode: string | null
           ref: string | null
+          seen_at: string | null
           source: string
+          state: string | null
           status: Database["public"]["Enums"]["enquiry_status"]
           updated_at: string
         }
@@ -208,7 +231,9 @@ export type Database = {
           name: string
           pincode?: string | null
           ref?: string | null
+          seen_at?: string | null
           source?: string
+          state?: string | null
           status?: Database["public"]["Enums"]["enquiry_status"]
           updated_at?: string
         }
@@ -230,7 +255,9 @@ export type Database = {
           name?: string
           pincode?: string | null
           ref?: string | null
+          seen_at?: string | null
           source?: string
+          state?: string | null
           status?: Database["public"]["Enums"]["enquiry_status"]
           updated_at?: string
         }

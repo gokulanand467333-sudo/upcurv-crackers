@@ -1,7 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, FileCheck2, MessageCircle, Phone, Trash2 } from "lucide-react";
-import { useState } from "react";
+import {
+  ArrowLeft,
+  FileCheck2,
+  MessageCircle,
+  Pencil,
+  Phone,
+  Printer,
+  Trash2,
+  X,
+} from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { AdminShell } from "@/components/admin-shell";
@@ -10,10 +19,12 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import { PIPELINE, STATUS_LABEL, waLink, type EnquiryStatus } from "@/lib/admin";
+import { PIPELINE, STATUS_LABEL, STATUS_TONE, waLink, type EnquiryStatus } from "@/lib/admin";
 import type { TablesUpdate } from "@/integrations/supabase/types";
+import { downloadDeliverySlip } from "@/lib/delivery-slip";
 import { downloadSummaryPdf } from "@/lib/enquiry-pdf";
 import { inr } from "@/lib/shop";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/enquiries/$id")({
   head: () => ({
@@ -33,6 +44,7 @@ function EnquiryDetail() {
   const qc = useQueryClient();
   const [note, setNote] = useState("");
   const [followUp, setFollowUp] = useState("");
+  const [editing, setEditing] = useState(false);
 
   const enquiry = useQuery({
     queryKey: ["admin", "enquiry", id],
@@ -50,6 +62,17 @@ function EnquiryDetail() {
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ["admin"] });
   };
+
+  // Opening the enquiry marks it as seen, which clears the sidebar alert.
+  const seenAt = enquiry.data?.seen_at ?? null;
+  useEffect(() => {
+    if (!enquiry.data || seenAt) return;
+    void supabase
+      .from("enquiries")
+      .update({ seen_at: new Date().toISOString() })
+      .eq("id", id)
+      .then(() => qc.invalidateQueries({ queryKey: ["admin"] }));
+  }, [enquiry.data, seenAt, id, qc]);
 
   const update = useMutation({
     mutationFn: async (patch: TablesUpdate<"enquiries">) => {
@@ -73,18 +96,30 @@ function EnquiryDetail() {
     },
   });
 
+  /** Every edit is logged automatically in the internal notes trail. */
+  const logEdit = (text: string) => {
+    void supabase.from("enquiry_notes").insert({
+      enquiry_id: id,
+      note: `[edit] ${text}`,
+    });
+  };
+
   const itemMutation = useMutation({
     mutationFn: async ({
       itemId,
       patch,
+      log,
     }: {
       itemId: string;
       patch: TablesUpdate<"enquiry_items">;
+      log?: string;
     }) => {
       const { error } = await supabase.from("enquiry_items").update(patch).eq("id", itemId);
       if (error) throw error;
+      if (log) logEdit(log);
     },
     onSuccess: invalidate,
+    onError: (e: Error) => toast.error(e.message),
   });
 
   if (enquiry.isLoading || !enquiry.data) {
@@ -106,6 +141,11 @@ function EnquiryDetail() {
     .map((i) => `${i.product_name} x${i.qty} — ${inr(i.qty * Number(i.unit_price))}`)
     .join("\n")}\nTotal (indicative): ${inr(quotedValue)}\nSubject to final confirmation.`;
 
+  const setStatus = (status: EnquiryStatus) => {
+    if (status === e.status) return;
+    update.mutate({ status }, { onSuccess: () => logEdit(`Status changed to ${STATUS_LABEL[status]}`) });
+  };
+
   return (
     <AdminShell>
       <Link to="/enquiries" className="inline-flex items-center gap-1 text-sm text-muted-foreground">
@@ -120,14 +160,42 @@ function EnquiryDetail() {
                 <h1 className="text-2xl font-semibold">{e.name}</h1>
                 <p className="text-sm text-muted-foreground">
                   📞 {e.mobile} · {e.city}
+                  {e.state ? `, ${e.state}` : ""}
                 </p>
+                {(e.address || e.pincode) && (
+                  <p className="text-sm text-muted-foreground">
+                    {[e.address, e.pincode].filter(Boolean).join(" · ")}
+                  </p>
+                )}
                 <p className="mt-1 text-xs text-muted-foreground">
                   {e.ref} · source: {e.source} · {new Date(e.created_at).toLocaleString("en-IN")}
                 </p>
               </div>
-              <span className="rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground">
-                {STATUS_LABEL[e.status]}
-              </span>
+              <div className="flex items-center gap-2">
+                <span
+                  className={cn(
+                    "rounded-full border px-3 py-1 text-xs font-semibold",
+                    STATUS_TONE[e.status],
+                  )}
+                >
+                  {STATUS_LABEL[e.status]}
+                </span>
+                <Button
+                  size="sm"
+                  variant={editing ? "secondary" : "outline"}
+                  onClick={() => setEditing((v) => !v)}
+                >
+                  {editing ? (
+                    <>
+                      <X className="size-4" /> Done editing
+                    </>
+                  ) : (
+                    <>
+                      <Pencil className="size-4" /> Edit
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
 
             <div className="mt-4 flex flex-wrap gap-2">
@@ -144,50 +212,103 @@ function EnquiryDetail() {
               <Button asChild size="lg" variant="outline">
                 <a href={waLink(e.mobile, quote)}>Send Quotation</a>
               </Button>
-            </div>
-
-            <div className="mt-4 flex flex-wrap gap-2">
-              {PIPELINE.map((p) => (
-                <button
-                  key={p.key}
-                  onClick={() => update.mutate({ status: p.key as EnquiryStatus })}
-                  className={`rounded-full border px-3 py-1.5 text-xs font-medium ${
-                    e.status === p.key
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border"
-                  }`}
+              {e.status === "ready" && (
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={() => {
+                    try {
+                      downloadDeliverySlip({
+                        ref: e.ref ?? "",
+                        customer: {
+                          name: e.name,
+                          mobile: e.mobile,
+                          city: e.city,
+                          state: e.state,
+                          address: e.address,
+                          pincode: e.pincode,
+                        },
+                        lines: items.map((i) => ({ name: i.product_name, qty: i.qty })),
+                        total: quotedValue,
+                        fileName: `Delivery-Slip-${e.ref}.pdf`,
+                      });
+                    } catch {
+                      toast.error("Could not generate the delivery slip.");
+                    }
+                  }}
                 >
-                  {p.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="mt-4 flex flex-wrap items-end gap-2">
-              <div>
-                <label className="text-xs text-muted-foreground">Follow up at</label>
-                <Input
-                  type="datetime-local"
-                  value={followUp}
-                  onChange={(ev) => setFollowUp(ev.target.value)}
-                  className="mt-1 w-56"
-                />
-              </div>
-              <Button
-                variant="secondary"
-                onClick={() =>
-                  update.mutate({
-                    follow_up_at: followUp ? new Date(followUp).toISOString() : null,
-                  })
-                }
-              >
-                Save follow-up
-              </Button>
-              {e.follow_up_at && (
-                <span className="text-xs text-muted-foreground">
-                  Scheduled: {new Date(e.follow_up_at).toLocaleString("en-IN")}
-                </span>
+                  <Printer className="size-4" /> Delivery slip
+                </Button>
               )}
             </div>
+
+            {editing ? (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {PIPELINE.map((p) => (
+                  <button
+                    key={p.key}
+                    onClick={() => setStatus(p.key)}
+                    className={`rounded-full border px-3 py-1.5 text-xs font-medium ${
+                      e.status === p.key
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border"
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-4 text-xs text-muted-foreground">
+                View only — tap Edit to change the status, quantities or follow-up.
+              </p>
+            )}
+
+            {editing ? (
+              <div className="mt-4 flex flex-wrap items-end gap-2">
+                <div>
+                  <label className="text-xs text-muted-foreground">Follow up at</label>
+                  <Input
+                    type="datetime-local"
+                    value={followUp}
+                    onChange={(ev) => setFollowUp(ev.target.value)}
+                    className="mt-1 w-56"
+                  />
+                </div>
+                <Button
+                  variant="secondary"
+                  onClick={() =>
+                    update.mutate(
+                      { follow_up_at: followUp ? new Date(followUp).toISOString() : null },
+                      {
+                        onSuccess: () =>
+                          logEdit(
+                            followUp
+                              ? `Follow-up set to ${new Date(followUp).toLocaleString("en-IN")}`
+                              : "Follow-up cleared",
+                          ),
+                      },
+                    )
+                  }
+                >
+                  Save follow-up
+                </Button>
+                {e.follow_up_at && (
+                  <span className="text-xs text-muted-foreground">
+                    Scheduled: {new Date(e.follow_up_at).toLocaleString("en-IN")}
+                  </span>
+                )}
+              </div>
+            ) : (
+              e.follow_up_at && (
+                <p className="mt-3 text-sm">
+                  Follow-up scheduled:{" "}
+                  <span className="font-medium">
+                    {new Date(e.follow_up_at).toLocaleString("en-IN")}
+                  </span>
+                </p>
+              )
+            )}
 
             {(e.message || e.free_text) && (
               <div className="mt-4 rounded-xl bg-secondary/60 p-3 text-sm">
@@ -217,39 +338,46 @@ function EnquiryDetail() {
                     <p className="truncate text-sm font-medium">{i.product_name}</p>
                     <p className="text-xs text-muted-foreground">{i.product_code}</p>
                   </div>
-                  <Input
-                    type="number"
-                    min={1}
-                    value={i.qty}
-                    className="w-16"
-                    onChange={(ev) =>
-                      itemMutation.mutate({
-                        itemId: i.id,
-                        patch: { qty: Math.max(1, Number(ev.target.value)) },
-                      })
-                    }
-                  />
-                  <Input
-                    type="number"
-                    min={0}
-                    value={Number(i.unit_price)}
-                    className="w-24"
-                    onChange={(ev) =>
-                      itemMutation.mutate({
-                        itemId: i.id,
-                        patch: { unit_price: Number(ev.target.value) },
-                      })
-                    }
-                  />
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() =>
-                      itemMutation.mutate({ itemId: i.id, patch: { removed: !i.removed } })
-                    }
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
+                  {editing ? (
+                    <Input
+                      type="number"
+                      min={1}
+                      value={i.qty}
+                      className="w-16"
+                      onChange={(ev) => {
+                        const qty = Math.max(1, Number(ev.target.value));
+                        itemMutation.mutate({
+                          itemId: i.id,
+                          patch: { qty },
+                          log: `${i.product_name}: quantity ${i.qty} → ${qty}`,
+                        });
+                      }}
+                    />
+                  ) : (
+                    <span className="w-16 text-center text-sm tabular-nums">× {i.qty}</span>
+                  )}
+                  {/* Prices come from the catalogue — change them on the Products page. */}
+                  <span className="w-24 text-right text-sm tabular-nums text-muted-foreground">
+                    {inr(Number(i.unit_price))}
+                  </span>
+                  <span className="w-24 text-right text-sm font-semibold">
+                    {inr(i.qty * Number(i.unit_price))}
+                  </span>
+                  {editing && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() =>
+                        itemMutation.mutate({
+                          itemId: i.id,
+                          patch: { removed: !i.removed },
+                          log: `${i.product_name} ${i.removed ? "restored" : "removed"}`,
+                        })
+                      }
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  )}
                 </div>
               ))}
               {e.enquiry_items.length === 0 && (
@@ -258,69 +386,76 @@ function EnquiryDetail() {
                 </p>
               )}
             </div>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button
-                variant="outline"
-                onClick={() =>
-                  update.mutate({
-                    estimated_value: quotedValue,
-                    item_count: items.reduce((s, i) => s + i.qty, 0),
-                  })
-                }
-              >
-                Save revised totals
-              </Button>
-              <Button
-                onClick={() => {
-                  update.mutate(
-                    {
-                      status: "confirmed",
-                      estimated_value: quotedValue,
-                      item_count: items.reduce((s, i) => s + i.qty, 0),
-                    },
-                    {
-                      onSuccess: () => {
-                        addNote.mutate(
-                          `Converted to order on ${new Date().toLocaleString("en-IN")} · ${items.length} lines · ${inr(quotedValue)}`,
-                        );
-                        try {
-                          downloadSummaryPdf({
-                            title: "Order Confirmation",
-                            ref: e.ref ?? "",
-                            customer: { name: e.name, mobile: e.mobile, city: e.city },
-                            items: items.map((i) => ({
-                              name: i.product_name,
-                              code: i.product_code,
-                              qty: i.qty,
-                              price: Number(i.unit_price),
-                            })),
-                            note: "Order confirmed offline with the customer. Fulfilment as agreed with the seller.",
-                            fileName: `Order-${e.ref}.pdf`,
-                          });
-                        } catch {
-                          toast.error("Order saved, but the PDF could not be generated.");
-                        }
-                        toast.success("Enquiry converted to order.");
+            {editing && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    update.mutate(
+                      {
+                        estimated_value: quotedValue,
+                        item_count: items.reduce((s, i) => s + i.qty, 0),
                       },
-                    },
-                  );
-                }}
-              >
-                <FileCheck2 className="size-4" /> Convert to Order
-              </Button>
-              <Button asChild variant="secondary">
-                <a
-                  href={waLink(
-                    e.mobile,
-                    `Hi ${e.name}, your order ${e.ref} is confirmed.\n${items
-                      .map((i) => `${i.product_name} x${i.qty} — ${inr(i.qty * Number(i.unit_price))}`)
-                      .join("\n")}\nTotal: ${inr(quotedValue)}\nWe will contact you for pickup/handover.`,
-                  )}
+                      { onSuccess: () => logEdit(`Totals revised to ${inr(quotedValue)}`) },
+                    )
+                  }
                 >
-                  Send order confirmation
-                </a>
-              </Button>
-            </div>
+                  Save revised totals
+                </Button>
+                <Button
+                  onClick={() => {
+                    update.mutate(
+                      {
+                        status: "confirmed",
+                        estimated_value: quotedValue,
+                        item_count: items.reduce((s, i) => s + i.qty, 0),
+                      },
+                      {
+                        onSuccess: () => {
+                          addNote.mutate(
+                            `Converted to order on ${new Date().toLocaleString("en-IN")} · ${items.length} lines · ${inr(quotedValue)}`,
+                          );
+                          try {
+                            downloadSummaryPdf({
+                              title: "Order Confirmation",
+                              ref: e.ref ?? "",
+                              customer: { name: e.name, mobile: e.mobile, city: e.city },
+                              items: items.map((i) => ({
+                                name: i.product_name,
+                                code: i.product_code,
+                                qty: i.qty,
+                                price: Number(i.unit_price),
+                              })),
+                              note: "Order confirmed offline with the customer. Fulfilment as agreed with the seller.",
+                              fileName: `Order-${e.ref}.pdf`,
+                            });
+                          } catch {
+                            toast.error("Order saved, but the PDF could not be generated.");
+                          }
+                          toast.success("Enquiry converted to order.");
+                        },
+                      },
+                    );
+                  }}
+                >
+                  <FileCheck2 className="size-4" /> Convert to Order
+                </Button>
+                <Button asChild variant="secondary">
+                  <a
+                    href={waLink(
+                      e.mobile,
+                      `Hi ${e.name}, your order ${e.ref} is confirmed.\n${items
+                        .map(
+                          (i) => `${i.product_name} x${i.qty} — ${inr(i.qty * Number(i.unit_price))}`,
+                        )
+                        .join("\n")}\nTotal: ${inr(quotedValue)}\nWe will contact you for pickup/handover.`,
+                    )}
+                  >
+                    Send order confirmation
+                  </a>
+                </Button>
+              </div>
+            )}
           </div>
         </div>
 
