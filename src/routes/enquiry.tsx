@@ -624,11 +624,16 @@ function EnquiryPage() {
               if (
                 !form.name.trim() ||
                 form.mobile.trim().length < 8 ||
+                !form.state ||
                 !form.city.trim() ||
                 !form.address.trim() ||
                 form.pincode.trim().length < 4
               ) {
-                toast.error("Please fill name, mobile, city, address and pincode.");
+                toast.error("Please fill name, mobile, state, city, address and pincode.");
+                return;
+              }
+              if (minOrder > 0 && total < minOrder) {
+                toast.error(`Minimum enquiry value is ${inr(minOrder)}.`);
                 return;
               }
               mutation.mutate();
