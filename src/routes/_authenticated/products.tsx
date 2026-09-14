@@ -203,6 +203,94 @@ function ProductsAdmin() {
     onError: () => toast.error("Product is used in an enquiry or combo — deactivate it instead."),
   });
 
+  const parseFile = async (file: File) => {
+    try {
+      const XLSX = await import("xlsx");
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, { type: "array" });
+      const sheet = wb.Sheets[wb.SheetNames[0]!]!;
+      const raw = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: "" });
+      const errors: string[] = [];
+      const parsed: ImportRow[] = [];
+
+      raw.forEach((r, i) => {
+        const code = pick(r, ["code", "productcode", "sku", "itemcode"]).toUpperCase();
+        const name = pick(r, ["name", "productname", "item", "description"]);
+        const price = Number(pick(r, ["price", "sellingprice", "rate", "offerprice"]) || 0);
+        if (!code || !name) {
+          errors.push(`Row ${i + 2}: missing code or name — skipped`);
+          return;
+        }
+        const availability = pick(r, ["availability", "stock", "status"])
+          .toLowerCase()
+          .replace(/[\s-]+/g, "_");
+        const mrpRaw = pick(r, ["mrp", "listprice", "actualprice"]);
+        parsed.push({
+          code,
+          name,
+          name_ta: pick(r, ["nameta", "tamilname", "tamil"]) || null,
+          pack: pick(r, ["pack", "packing", "unit", "qtyperpack"]) || null,
+          price,
+          mrp: mrpRaw ? Number(mrpRaw) : null,
+          category: pick(r, ["category", "categoryname", "group"]),
+          availability: (AVAIL_SET.has(availability)
+            ? availability
+            : "available") as Enums<"availability_status">,
+        });
+      });
+
+      if (parsed.length === 0) {
+        toast.error("No usable rows found. Check the column names.");
+        return;
+      }
+      setImportErrors(errors);
+      setImportRows(parsed);
+    } catch {
+      toast.error("Could not read that file. Use .xlsx, .xls or .csv.");
+    }
+  };
+
+  const runImport = useMutation({
+    mutationFn: async (rows: ImportRow[]) => {
+      const cats = categories.data ?? [];
+      const bySlug = new Map(cats.map((c) => [c.name.trim().toLowerCase(), c.id]));
+      const payload: TablesInsert<"products">[] = rows.map((r) => ({
+        code: r.code,
+        name: r.name,
+        name_ta: r.name_ta,
+        pack: r.pack,
+        price: r.price,
+        mrp: r.mrp,
+        category_id: bySlug.get(r.category.trim().toLowerCase()) ?? null,
+        availability: r.availability,
+        active: true,
+      }));
+      const { error } = await supabase
+        .from("products")
+        .upsert(payload, { onConflict: "code" });
+      if (error) throw error;
+      return payload.length;
+    },
+    onSuccess: (n) => {
+      toast.success(`${n} products imported`);
+      setImportRows(null);
+      setImportErrors([]);
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const downloadTemplate = () => {
+    const csv =
+      "code,name,name_ta,category,pack,price,mrp,availability\nCRK-101,Sparkler 10cm,ஸ்பார்க்லர்,Sparklers,1 box (10 pcs),120,180,available\n";
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "upcurv-products-template.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const catName = useMemo(
     () => Object.fromEntries((categories.data ?? []).map((c) => [c.id, c.name])),
     [categories.data],
