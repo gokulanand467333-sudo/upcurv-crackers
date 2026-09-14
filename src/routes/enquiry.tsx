@@ -653,15 +653,48 @@ function EnquiryPage() {
                 required
               />
             </div>
+            <div className="space-y-1.5">
+              <Label>State*</Label>
+              <Select
+                value={form.state}
+                onValueChange={(v) => setForm({ ...form, state: v, city: "" })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select state" />
+                </SelectTrigger>
+                <SelectContent className="max-h-72">
+                  {STATES.map((s) => (
+                    <SelectItem
+                      key={s}
+                      value={s}
+                      className={s === TAMIL_NADU ? "font-semibold text-primary" : ""}
+                    >
+                      {s}
+                      {s === TAMIL_NADU ? " ★" : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="city">City / Area*</Label>
-                <Input
-                  id="city"
+                <Label>City / Area*</Label>
+                <Select
                   value={form.city}
-                  onChange={(e) => setForm({ ...form, city: e.target.value })}
-                  required
-                />
+                  disabled={!form.state}
+                  onValueChange={(v) => setForm({ ...form, city: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={form.state ? "Select city" : "Select state first"} />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    {citiesFor(form.state).map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="pincode">Pincode*</Label>
