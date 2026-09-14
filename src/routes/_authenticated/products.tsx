@@ -325,11 +325,91 @@ function ProductsAdmin() {
               className="w-56 pl-8"
             />
           </div>
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".xlsx,.xls,.csv"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) void parseFile(f);
+              e.target.value = "";
+            }}
+          />
+          <Button variant="outline" onClick={() => fileRef.current?.click()}>
+            <Upload className="size-4" /> Import Excel
+          </Button>
           <Button onClick={() => setDraft(emptyDraft())}>
             <Plus className="size-4" /> Add product
           </Button>
         </div>
       </div>
+
+      <Dialog
+        open={!!importRows}
+        onOpenChange={(o) => {
+          if (!o) {
+            setImportRows(null);
+            setImportErrors([]);
+          }
+        }}
+      >
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Import preview</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            {importRows?.length ?? 0} products ready. Existing products with the same code are
+            updated; new codes are added.
+          </p>
+          {importErrors.length > 0 && (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">
+              {importErrors.slice(0, 5).map((e) => (
+                <p key={e}>{e}</p>
+              ))}
+              {importErrors.length > 5 && <p>+{importErrors.length - 5} more skipped rows</p>}
+            </div>
+          )}
+          <div className="max-h-72 overflow-auto rounded-lg border border-border">
+            <table className="w-full text-left text-xs">
+              <thead className="sticky top-0 bg-muted">
+                <tr>
+                  <th className="p-2">Code</th>
+                  <th className="p-2">Name</th>
+                  <th className="p-2">Category</th>
+                  <th className="p-2 text-right">Price</th>
+                  <th className="p-2 text-right">MRP</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {(importRows ?? []).slice(0, 100).map((r) => (
+                  <tr key={r.code}>
+                    <td className="p-2 font-medium">{r.code}</td>
+                    <td className="p-2">{r.name}</td>
+                    <td className="p-2 text-muted-foreground">{r.category || "—"}</td>
+                    <td className="p-2 text-right">{r.price}</td>
+                    <td className="p-2 text-right">{r.mrp ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={downloadTemplate}>
+              <Download className="size-4" /> Template
+            </Button>
+            <Button variant="outline" onClick={() => setImportRows(null)}>
+              Cancel
+            </Button>
+            <Button
+              disabled={runImport.isPending}
+              onClick={() => importRows && runImport.mutate(importRows)}
+            >
+              {runImport.isPending ? "Importing…" : `Import ${importRows?.length ?? 0} products`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="mt-5 overflow-hidden rounded-2xl border border-border bg-card">
         {products.isLoading ? (
