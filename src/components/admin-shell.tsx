@@ -228,6 +228,7 @@ function NavGroup({
 export function AdminShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const currentPath = useRouterState({ select: (router) => router.location.pathname });
+  const unseen = useUnseenEnquiries();
 
   return (
     <SidebarProvider>
