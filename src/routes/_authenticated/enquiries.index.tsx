@@ -164,12 +164,22 @@ function Pipeline() {
             {gridRows.map((r) => (
               <div
                 key={r.id}
-                className="rounded-xl border border-border bg-card p-4 shadow-sm transition-shadow hover:shadow-md"
+                className={cn(
+                  "rounded-xl border bg-card p-4 shadow-sm transition-shadow hover:shadow-md",
+                  r.seen_at
+                    ? "border-border"
+                    : "border-report-rose/40 bg-report-rose/5 ring-1 ring-report-rose/20",
+                )}
               >
                 <Link to="/enquiries/$id" params={{ id: r.id }} className="block">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold">{r.name}</p>
+                      <p className="flex items-center gap-1.5 truncate text-sm font-semibold">
+                        {!r.seen_at && (
+                          <span className="size-2 shrink-0 rounded-full bg-report-rose" />
+                        )}
+                        {r.name}
+                      </p>
                       <p className="truncate text-[11px] text-muted-foreground">
                         {r.ref} · {r.city}
                       </p>
