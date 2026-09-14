@@ -75,11 +75,15 @@ function Pipeline() {
     },
   });
 
-  const rows = (data ?? []).filter((r) =>
-    q
-      ? `${r.name} ${r.mobile} ${r.ref ?? ""} ${r.city}`.toLowerCase().includes(q.toLowerCase())
-      : true,
-  );
+  const CLOSED: Enquiry["status"][] = ["completed", "not_converted"];
+  const rows = (data ?? [])
+    .filter((r) =>
+      q
+        ? `${r.name} ${r.mobile} ${r.ref ?? ""} ${r.city}`.toLowerCase().includes(q.toLowerCase())
+        : true,
+    )
+    // Completed and not-converted enquiries always sink to the bottom of every list.
+    .sort((a, b) => Number(CLOSED.includes(a.status)) - Number(CLOSED.includes(b.status)));
   const gridRows = status === "all" ? rows : rows.filter((r) => r.status === status);
 
   return (
