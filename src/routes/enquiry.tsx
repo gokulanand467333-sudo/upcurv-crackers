@@ -70,9 +70,13 @@ function EnquiryPage() {
   const [couponCode, setCouponCode] = useState<string | null>(null);
   const coupons = useQuery(couponsQuery);
 
+  const settings = useQuery(orderSettingsQuery);
+  const minOrder = settings.data?.min_order_value ?? 0;
+
   const [form, setForm] = useState({
     name: "",
     mobile: "",
+    state: "",
     city: "",
     address: "",
     pincode: "",
