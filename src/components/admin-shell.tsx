@@ -186,10 +186,12 @@ function NavGroup({
   label,
   items,
   currentPath,
+  badges = {},
 }: {
   label: string;
   items: readonly { to: string; label: string; icon: React.ComponentType }[];
   currentPath: string;
+  badges?: Record<string, number>;
 }) {
   return (
     <SidebarGroup>
