@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Pencil, Plus, Search, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Download, Pencil, Plus, Search, Trash2, Upload } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { AdminShell } from "@/components/admin-shell";
@@ -103,10 +103,37 @@ const toDraft = (p: Product): Draft => ({
 });
 
 
+type ImportRow = {
+  code: string;
+  name: string;
+  name_ta: string | null;
+  pack: string | null;
+  price: number;
+  mrp: number | null;
+  category: string;
+  availability: Enums<"availability_status">;
+};
+
+const AVAIL_SET = new Set(AVAILABILITY as string[]);
+
+function pick(row: Record<string, unknown>, keys: string[]) {
+  for (const k of Object.keys(row)) {
+    const norm = k.trim().toLowerCase().replace(/[\s_-]+/g, "");
+    if (keys.includes(norm)) {
+      const v = row[k];
+      if (v !== undefined && v !== null && String(v).trim() !== "") return String(v).trim();
+    }
+  }
+  return "";
+}
+
 function ProductsAdmin() {
   const qc = useQueryClient();
   const [q, setQ] = useState("");
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [importRows, setImportRows] = useState<ImportRow[] | null>(null);
+  const [importErrors, setImportErrors] = useState<string[]>([]);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const categories = useQuery(categoriesQuery);
   const products = useQuery({

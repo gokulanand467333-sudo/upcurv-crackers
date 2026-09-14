@@ -24,6 +24,7 @@ import { Route as AuthenticatedDealsRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedFollowUpsRouteImport } from './routes/_authenticated/follow-ups'
 import { Route as AuthenticatedGuideRouteImport } from './routes/_authenticated/guide'
 import { Route as AuthenticatedManageCombosRouteImport } from './routes/_authenticated/manage-combos'
+import { Route as AuthenticatedNewEnquiryRouteImport } from './routes/_authenticated/new-enquiry'
 import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticated/products'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as CombosIndexRouteImport } from './routes/combos.index'
@@ -106,6 +107,11 @@ const AuthenticatedManageCombosRoute =
     path: '/manage-combos',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedNewEnquiryRoute = AuthenticatedNewEnquiryRouteImport.update({
+  id: '/new-enquiry',
+  path: '/new-enquiry',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedProductsRoute = AuthenticatedProductsRouteImport.update({
   id: '/products',
   path: '/products',
@@ -154,6 +160,7 @@ export interface FileRoutesByFullPath {
   '/follow-ups': typeof AuthenticatedFollowUpsRoute
   '/guide': typeof AuthenticatedGuideRoute
   '/manage-combos': typeof AuthenticatedManageCombosRoute
+  '/new-enquiry': typeof AuthenticatedNewEnquiryRoute
   '/products': typeof AuthenticatedProductsRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/combos/$slug': typeof CombosSlugRoute
@@ -175,6 +182,7 @@ export interface FileRoutesByTo {
   '/follow-ups': typeof AuthenticatedFollowUpsRoute
   '/guide': typeof AuthenticatedGuideRoute
   '/manage-combos': typeof AuthenticatedManageCombosRoute
+  '/new-enquiry': typeof AuthenticatedNewEnquiryRoute
   '/products': typeof AuthenticatedProductsRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/combos/$slug': typeof CombosSlugRoute
@@ -199,6 +207,7 @@ export interface FileRoutesById {
   '/_authenticated/follow-ups': typeof AuthenticatedFollowUpsRoute
   '/_authenticated/guide': typeof AuthenticatedGuideRoute
   '/_authenticated/manage-combos': typeof AuthenticatedManageCombosRoute
+  '/_authenticated/new-enquiry': typeof AuthenticatedNewEnquiryRoute
   '/_authenticated/products': typeof AuthenticatedProductsRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/combos/$slug': typeof CombosSlugRoute
@@ -223,6 +232,7 @@ export interface FileRouteTypes {
     | '/follow-ups'
     | '/guide'
     | '/manage-combos'
+    | '/new-enquiry'
     | '/products'
     | '/reports'
     | '/combos/$slug'
@@ -244,6 +254,7 @@ export interface FileRouteTypes {
     | '/follow-ups'
     | '/guide'
     | '/manage-combos'
+    | '/new-enquiry'
     | '/products'
     | '/reports'
     | '/combos/$slug'
@@ -267,6 +278,7 @@ export interface FileRouteTypes {
     | '/_authenticated/follow-ups'
     | '/_authenticated/guide'
     | '/_authenticated/manage-combos'
+    | '/_authenticated/new-enquiry'
     | '/_authenticated/products'
     | '/_authenticated/reports'
     | '/combos/$slug'
@@ -393,6 +405,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManageCombosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/new-enquiry': {
+      id: '/_authenticated/new-enquiry'
+      path: '/new-enquiry'
+      fullPath: '/new-enquiry'
+      preLoaderRoute: typeof AuthenticatedNewEnquiryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/products': {
       id: '/_authenticated/products'
       path: '/products'
@@ -446,6 +465,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFollowUpsRoute: typeof AuthenticatedFollowUpsRoute
   AuthenticatedGuideRoute: typeof AuthenticatedGuideRoute
   AuthenticatedManageCombosRoute: typeof AuthenticatedManageCombosRoute
+  AuthenticatedNewEnquiryRoute: typeof AuthenticatedNewEnquiryRoute
   AuthenticatedProductsRoute: typeof AuthenticatedProductsRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedEnquiriesIdRoute: typeof AuthenticatedEnquiriesIdRoute
@@ -460,6 +480,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFollowUpsRoute: AuthenticatedFollowUpsRoute,
   AuthenticatedGuideRoute: AuthenticatedGuideRoute,
   AuthenticatedManageCombosRoute: AuthenticatedManageCombosRoute,
+  AuthenticatedNewEnquiryRoute: AuthenticatedNewEnquiryRoute,
   AuthenticatedProductsRoute: AuthenticatedProductsRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedEnquiriesIdRoute: AuthenticatedEnquiriesIdRoute,
