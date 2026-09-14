@@ -245,13 +245,14 @@ export function AdminShell({ children }: { children: ReactNode }) {
           </div>
         </SidebarHeader>
         <SidebarContent className="py-2">
-          <NavGroup label="Workspace" items={WORK_LINKS} currentPath={currentPath} />
-          <NavGroup label="Catalogue" items={CATALOGUE_LINKS} currentPath={currentPath} />
           <NavGroup
-            label="Help"
-            items={[{ to: "/guide", label: "Guide", icon: BookOpen }]}
+            label="Workspace"
+            items={WORK_LINKS}
             currentPath={currentPath}
+            badges={{ "/enquiries": unseen }}
           />
+          <NavGroup label="Catalogue" items={CATALOGUE_LINKS} currentPath={currentPath} />
+          <NavGroup label="Help" items={SETTINGS_LINKS} currentPath={currentPath} />
         </SidebarContent>
         <SidebarFooter className="border-t border-sidebar-border p-3">
           <SidebarMenu>
