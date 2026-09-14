@@ -21,6 +21,8 @@ import { Route as AuthenticatedCategoriesRouteImport } from './routes/_authentic
 import { Route as AuthenticatedCouponsRouteImport } from './routes/_authenticated/coupons'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDealsRouteImport } from './routes/_authenticated/deals'
+import { Route as AuthenticatedFollowUpsRouteImport } from './routes/_authenticated/follow-ups'
+import { Route as AuthenticatedGuideRouteImport } from './routes/_authenticated/guide'
 import { Route as AuthenticatedManageCombosRouteImport } from './routes/_authenticated/manage-combos'
 import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticated/products'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
@@ -88,6 +90,16 @@ const AuthenticatedDealsRoute = AuthenticatedDealsRouteImport.update({
   path: '/deals',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedFollowUpsRoute = AuthenticatedFollowUpsRouteImport.update({
+  id: '/follow-ups',
+  path: '/follow-ups',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedGuideRoute = AuthenticatedGuideRouteImport.update({
+  id: '/guide',
+  path: '/guide',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedManageCombosRoute =
   AuthenticatedManageCombosRouteImport.update({
     id: '/manage-combos',
@@ -139,6 +151,8 @@ export interface FileRoutesByFullPath {
   '/coupons': typeof AuthenticatedCouponsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/deals': typeof AuthenticatedDealsRoute
+  '/follow-ups': typeof AuthenticatedFollowUpsRoute
+  '/guide': typeof AuthenticatedGuideRoute
   '/manage-combos': typeof AuthenticatedManageCombosRoute
   '/products': typeof AuthenticatedProductsRoute
   '/reports': typeof AuthenticatedReportsRoute
@@ -158,6 +172,8 @@ export interface FileRoutesByTo {
   '/coupons': typeof AuthenticatedCouponsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/deals': typeof AuthenticatedDealsRoute
+  '/follow-ups': typeof AuthenticatedFollowUpsRoute
+  '/guide': typeof AuthenticatedGuideRoute
   '/manage-combos': typeof AuthenticatedManageCombosRoute
   '/products': typeof AuthenticatedProductsRoute
   '/reports': typeof AuthenticatedReportsRoute
@@ -180,6 +196,8 @@ export interface FileRoutesById {
   '/_authenticated/coupons': typeof AuthenticatedCouponsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/deals': typeof AuthenticatedDealsRoute
+  '/_authenticated/follow-ups': typeof AuthenticatedFollowUpsRoute
+  '/_authenticated/guide': typeof AuthenticatedGuideRoute
   '/_authenticated/manage-combos': typeof AuthenticatedManageCombosRoute
   '/_authenticated/products': typeof AuthenticatedProductsRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
@@ -202,6 +220,8 @@ export interface FileRouteTypes {
     | '/coupons'
     | '/dashboard'
     | '/deals'
+    | '/follow-ups'
+    | '/guide'
     | '/manage-combos'
     | '/products'
     | '/reports'
@@ -221,6 +241,8 @@ export interface FileRouteTypes {
     | '/coupons'
     | '/dashboard'
     | '/deals'
+    | '/follow-ups'
+    | '/guide'
     | '/manage-combos'
     | '/products'
     | '/reports'
@@ -242,6 +264,8 @@ export interface FileRouteTypes {
     | '/_authenticated/coupons'
     | '/_authenticated/dashboard'
     | '/_authenticated/deals'
+    | '/_authenticated/follow-ups'
+    | '/_authenticated/guide'
     | '/_authenticated/manage-combos'
     | '/_authenticated/products'
     | '/_authenticated/reports'
@@ -348,6 +372,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDealsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/follow-ups': {
+      id: '/_authenticated/follow-ups'
+      path: '/follow-ups'
+      fullPath: '/follow-ups'
+      preLoaderRoute: typeof AuthenticatedFollowUpsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/guide': {
+      id: '/_authenticated/guide'
+      path: '/guide'
+      fullPath: '/guide'
+      preLoaderRoute: typeof AuthenticatedGuideRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/manage-combos': {
       id: '/_authenticated/manage-combos'
       path: '/manage-combos'
@@ -405,6 +443,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCouponsRoute: typeof AuthenticatedCouponsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDealsRoute: typeof AuthenticatedDealsRoute
+  AuthenticatedFollowUpsRoute: typeof AuthenticatedFollowUpsRoute
+  AuthenticatedGuideRoute: typeof AuthenticatedGuideRoute
   AuthenticatedManageCombosRoute: typeof AuthenticatedManageCombosRoute
   AuthenticatedProductsRoute: typeof AuthenticatedProductsRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
@@ -417,6 +457,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCouponsRoute: AuthenticatedCouponsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDealsRoute: AuthenticatedDealsRoute,
+  AuthenticatedFollowUpsRoute: AuthenticatedFollowUpsRoute,
+  AuthenticatedGuideRoute: AuthenticatedGuideRoute,
   AuthenticatedManageCombosRoute: AuthenticatedManageCombosRoute,
   AuthenticatedProductsRoute: AuthenticatedProductsRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
