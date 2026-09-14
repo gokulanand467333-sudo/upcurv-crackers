@@ -185,6 +185,7 @@ function EnquiryPage() {
           name: form.name.trim(),
           mobile: form.mobile.trim(),
           city: form.city.trim(),
+          state: form.state || null,
           address: form.address.trim() || null,
           pincode: form.pincode.trim() || null,
           fulfilment: "contact",
