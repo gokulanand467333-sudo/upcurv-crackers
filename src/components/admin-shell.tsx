@@ -206,8 +206,14 @@ function NavGroup({
               <SidebarMenuItem key={item.to}>
                 <SidebarMenuButton asChild isActive={active} tooltip={item.label} className="h-9">
                   <Link to={item.to}>
-                    <item.icon />
+                    <span className="relative flex shrink-0 items-center">
+                      <item.icon />
+                      {(badges[item.to] ?? 0) > 0 && (
+                        <span className="absolute -right-1 -top-1 size-2 rounded-full bg-report-rose group-data-[collapsible=icon]:block" />
+                      )}
+                    </span>
                     <span>{item.label}</span>
+                    <CountDot count={badges[item.to] ?? 0} className="ml-auto" />
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
