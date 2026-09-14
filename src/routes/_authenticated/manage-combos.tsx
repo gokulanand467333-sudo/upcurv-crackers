@@ -207,13 +207,15 @@ function CombosAdmin() {
       </Dialog>
 
       <Dialog open={!!itemsFor} onOpenChange={(o) => !o && setItemsFor(null)}>
-        <DialogContent className="w-[calc(100vw-2rem)] max-w-md rounded-3xl">
+        <DialogContent className="flex max-h-[85vh] w-[calc(100vw-2rem)] max-w-lg flex-col overflow-hidden rounded-3xl">
           <DialogHeader>
-            <DialogTitle>{itemsFor?.title} · items</DialogTitle>
+            <DialogTitle className="truncate">{itemsFor?.title} · items</DialogTitle>
           </DialogHeader>
-          {itemsFor && (
-            <ComboItems comboId={itemsFor.id} price={Number(itemsFor.indicative_price)} />
-          )}
+          <div className="-mr-2 min-h-0 flex-1 overflow-y-auto pr-2">
+            {itemsFor && (
+              <ComboItems comboId={itemsFor.id} price={Number(itemsFor.indicative_price)} />
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </AdminShell>
