@@ -129,7 +129,7 @@ function CombosAdmin() {
       </div>
 
       <Dialog open={!!draft} onOpenChange={(o) => !o && setDraft(null)}>
-        <DialogContent className="w-[calc(100vw-2rem)] max-w-md rounded-3xl">
+        <DialogContent className="max-h-[85vh] w-[calc(100vw-2rem)] max-w-md overflow-y-auto rounded-3xl">
           <DialogHeader>
             <DialogTitle>{draft?.id ? "Edit combo" : "New combo"}</DialogTitle>
           </DialogHeader>
