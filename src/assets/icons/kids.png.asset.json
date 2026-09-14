@@ -1,11 +1,11 @@
 {
-  "version": 1,
   "asset_id": "a8538e6d-7ab2-4307-ae6a-cac26994448b",
-  "project_id": "f1f688e3-44c1-46c4-8d69-94415169f75a",
-  "url": "/__l5e/assets-v1/a8538e6d-7ab2-4307-ae6a-cac26994448b/kids.png",
-  "r2_key": "a/v1/f1f688e3-44c1-46c4-8d69-94415169f75a/a8538e6d-7ab2-4307-ae6a-cac26994448b/kids.png",
-  "original_filename": "kids.png",
-  "size": 167357,
   "content_type": "image/png",
-  "created_at": "2026-09-06T07:07:30Z"
+  "created_at": "2026-09-06T07:07:30Z",
+  "original_filename": "kids.png",
+  "project_id": "16a8c1f7-5201-4bdd-a497-82e2dfdbdb23",
+  "r2_key": "a/v1/16a8c1f7-5201-4bdd-a497-82e2dfdbdb23/a8538e6d-7ab2-4307-ae6a-cac26994448b/kids.png",
+  "size": 167357,
+  "url": "/__l5e/assets-v1/a8538e6d-7ab2-4307-ae6a-cac26994448b/kids.png",
+  "version": 1
 }
