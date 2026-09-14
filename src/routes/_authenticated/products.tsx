@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Pencil, Plus, Search, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Download, Pencil, Plus, Search, Trash2, Upload } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { AdminShell } from "@/components/admin-shell";
@@ -103,10 +103,37 @@ const toDraft = (p: Product): Draft => ({
 });
 
 
+type ImportRow = {
+  code: string;
+  name: string;
+  name_ta: string | null;
+  pack: string | null;
+  price: number;
+  mrp: number | null;
+  category: string;
+  availability: Enums<"availability_status">;
+};
+
+const AVAIL_SET = new Set(AVAILABILITY as string[]);
+
+function pick(row: Record<string, unknown>, keys: string[]) {
+  for (const k of Object.keys(row)) {
+    const norm = k.trim().toLowerCase().replace(/[\s_-]+/g, "");
+    if (keys.includes(norm)) {
+      const v = row[k];
+      if (v !== undefined && v !== null && String(v).trim() !== "") return String(v).trim();
+    }
+  }
+  return "";
+}
+
 function ProductsAdmin() {
   const qc = useQueryClient();
   const [q, setQ] = useState("");
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [importRows, setImportRows] = useState<ImportRow[] | null>(null);
+  const [importErrors, setImportErrors] = useState<string[]>([]);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const categories = useQuery(categoriesQuery);
   const products = useQuery({
@@ -176,6 +203,94 @@ function ProductsAdmin() {
     onError: () => toast.error("Product is used in an enquiry or combo — deactivate it instead."),
   });
 
+  const parseFile = async (file: File) => {
+    try {
+      const XLSX = await import("xlsx");
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, { type: "array" });
+      const sheet = wb.Sheets[wb.SheetNames[0]!]!;
+      const raw = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: "" });
+      const errors: string[] = [];
+      const parsed: ImportRow[] = [];
+
+      raw.forEach((r, i) => {
+        const code = pick(r, ["code", "productcode", "sku", "itemcode"]).toUpperCase();
+        const name = pick(r, ["name", "productname", "item", "description"]);
+        const price = Number(pick(r, ["price", "sellingprice", "rate", "offerprice"]) || 0);
+        if (!code || !name) {
+          errors.push(`Row ${i + 2}: missing code or name — skipped`);
+          return;
+        }
+        const availability = pick(r, ["availability", "stock", "status"])
+          .toLowerCase()
+          .replace(/[\s-]+/g, "_");
+        const mrpRaw = pick(r, ["mrp", "listprice", "actualprice"]);
+        parsed.push({
+          code,
+          name,
+          name_ta: pick(r, ["nameta", "tamilname", "tamil"]) || null,
+          pack: pick(r, ["pack", "packing", "unit", "qtyperpack"]) || null,
+          price,
+          mrp: mrpRaw ? Number(mrpRaw) : null,
+          category: pick(r, ["category", "categoryname", "group"]),
+          availability: (AVAIL_SET.has(availability)
+            ? availability
+            : "available") as Enums<"availability_status">,
+        });
+      });
+
+      if (parsed.length === 0) {
+        toast.error("No usable rows found. Check the column names.");
+        return;
+      }
+      setImportErrors(errors);
+      setImportRows(parsed);
+    } catch {
+      toast.error("Could not read that file. Use .xlsx, .xls or .csv.");
+    }
+  };
+
+  const runImport = useMutation({
+    mutationFn: async (rows: ImportRow[]) => {
+      const cats = categories.data ?? [];
+      const bySlug = new Map(cats.map((c) => [c.name.trim().toLowerCase(), c.id]));
+      const payload: TablesInsert<"products">[] = rows.map((r) => ({
+        code: r.code,
+        name: r.name,
+        name_ta: r.name_ta,
+        pack: r.pack,
+        price: r.price,
+        mrp: r.mrp,
+        category_id: bySlug.get(r.category.trim().toLowerCase()) ?? null,
+        availability: r.availability,
+        active: true,
+      }));
+      const { error } = await supabase
+        .from("products")
+        .upsert(payload, { onConflict: "code" });
+      if (error) throw error;
+      return payload.length;
+    },
+    onSuccess: (n) => {
+      toast.success(`${n} products imported`);
+      setImportRows(null);
+      setImportErrors([]);
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const downloadTemplate = () => {
+    const csv =
+      "code,name,name_ta,category,pack,price,mrp,availability\nCRK-101,Sparkler 10cm,ஸ்பார்க்லர்,Sparklers,1 box (10 pcs),120,180,available\n";
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "upcurv-products-template.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const catName = useMemo(
     () => Object.fromEntries((categories.data ?? []).map((c) => [c.id, c.name])),
     [categories.data],
@@ -210,11 +325,91 @@ function ProductsAdmin() {
               className="w-56 pl-8"
             />
           </div>
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".xlsx,.xls,.csv"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) void parseFile(f);
+              e.target.value = "";
+            }}
+          />
+          <Button variant="outline" onClick={() => fileRef.current?.click()}>
+            <Upload className="size-4" /> Import Excel
+          </Button>
           <Button onClick={() => setDraft(emptyDraft())}>
             <Plus className="size-4" /> Add product
           </Button>
         </div>
       </div>
+
+      <Dialog
+        open={!!importRows}
+        onOpenChange={(o) => {
+          if (!o) {
+            setImportRows(null);
+            setImportErrors([]);
+          }
+        }}
+      >
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Import preview</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            {importRows?.length ?? 0} products ready. Existing products with the same code are
+            updated; new codes are added.
+          </p>
+          {importErrors.length > 0 && (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">
+              {importErrors.slice(0, 5).map((e) => (
+                <p key={e}>{e}</p>
+              ))}
+              {importErrors.length > 5 && <p>+{importErrors.length - 5} more skipped rows</p>}
+            </div>
+          )}
+          <div className="max-h-72 overflow-auto rounded-lg border border-border">
+            <table className="w-full text-left text-xs">
+              <thead className="sticky top-0 bg-muted">
+                <tr>
+                  <th className="p-2">Code</th>
+                  <th className="p-2">Name</th>
+                  <th className="p-2">Category</th>
+                  <th className="p-2 text-right">Price</th>
+                  <th className="p-2 text-right">MRP</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {(importRows ?? []).slice(0, 100).map((r) => (
+                  <tr key={r.code}>
+                    <td className="p-2 font-medium">{r.code}</td>
+                    <td className="p-2">{r.name}</td>
+                    <td className="p-2 text-muted-foreground">{r.category || "—"}</td>
+                    <td className="p-2 text-right">{r.price}</td>
+                    <td className="p-2 text-right">{r.mrp ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={downloadTemplate}>
+              <Download className="size-4" /> Template
+            </Button>
+            <Button variant="outline" onClick={() => setImportRows(null)}>
+              Cancel
+            </Button>
+            <Button
+              disabled={runImport.isPending}
+              onClick={() => importRows && runImport.mutate(importRows)}
+            >
+              {runImport.isPending ? "Importing…" : `Import ${importRows?.length ?? 0} products`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="mt-5 overflow-hidden rounded-2xl border border-border bg-card">
         {products.isLoading ? (

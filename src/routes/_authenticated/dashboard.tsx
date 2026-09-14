@@ -1,11 +1,34 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  BellRing,
+  CheckCircle2,
+  IndianRupee,
+  ListChecks,
+  PhoneCall,
+  PlusCircle,
+  XCircle,
+} from "lucide-react";
+import {
+  Area,
+  AreaChart,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip as RTooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 import { AdminShell } from "@/components/admin-shell";
+import { KpiCard } from "@/components/admin/kpi-card";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
-import { PIPELINE, STATUS_LABEL, type Enquiry } from "@/lib/admin";
+import { PIPELINE, STATUS_LABEL, STATUS_TONE, type Enquiry } from "@/lib/admin";
 import { inr } from "@/lib/shop";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -19,6 +42,14 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   }),
   component: Dashboard,
 });
+
+const PALETTE = [
+  "var(--report-blue)",
+  "var(--report-teal)",
+  "var(--report-green)",
+  "var(--report-violet)",
+  "var(--report-rose)",
+];
 
 function Dashboard() {
   const { data, isLoading } = useQuery({
@@ -37,42 +68,207 @@ function Dashboard() {
   const countBy = (s: string) => rows.filter((r) => r.status === s).length;
   const value = rows.reduce((s, r) => s + Number(r.estimated_value), 0);
   const followUps = rows.filter((r) => r.follow_up_at);
+  const today = new Date().toISOString().slice(0, 10);
+  const todayRows = rows.filter((r) => r.created_at.slice(0, 10) === today);
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  const yRows = rows.filter((r) => r.created_at.slice(0, 10) === yesterday);
+  const pct = (a: number, b: number) => (b === 0 ? (a > 0 ? 100 : 0) : ((a - b) / b) * 100);
 
-  const cards = [
-    { label: "New Enquiries", value: countBy("new") },
-    { label: "Pending Calls", value: countBy("contact_required") },
-    { label: "Confirmed", value: countBy("confirmed") },
-    { label: "Follow-up", value: followUps.length },
-    { label: "Not Converted", value: countBy("not_converted") },
-    { label: "Estimated Enquiry Value", value: inr(value) },
-  ];
+  const trend = (() => {
+    const map = new Map<string, { day: string; enquiries: number; value: number }>();
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
+      map.set(d, { day: d.slice(5), enquiries: 0, value: 0 });
+    }
+    for (const r of rows) {
+      const row = map.get(r.created_at.slice(0, 10));
+      if (!row) continue;
+      row.enquiries += 1;
+      row.value += Number(r.estimated_value);
+    }
+    return [...map.values()];
+  })();
+
+  const statusPie = PIPELINE.map((p) => ({ name: p.label, value: countBy(p.key) })).filter(
+    (s) => s.value > 0,
+  );
 
   return (
     <AdminShell>
-      <h1 className="text-2xl font-semibold">Today&apos;s overview</h1>
-
-      <div className="mt-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        {(isLoading ? Array.from({ length: 6 }) : cards).map((c, i) => (
-          <div key={i} className="rounded-2xl border border-border bg-card p-4">
-            {isLoading ? (
-              <>
-                <Skeleton className="h-3 w-20" />
-                <Skeleton className="mt-3 h-7 w-14" />
-              </>
-            ) : (
-              <>
-                <p className="text-xs text-muted-foreground">{(c as (typeof cards)[0]).label}</p>
-                <p className="mt-1 text-2xl font-semibold">{(c as (typeof cards)[0]).value}</p>
-              </>
-            )}
-          </div>
-        ))}
+      <div className="flex flex-wrap items-center gap-3">
+        <div>
+          <h1 className="text-xl font-semibold">Today&apos;s overview</h1>
+          <p className="text-sm text-muted-foreground">
+            {todayRows.length} new enquiries today · {followUps.length} follow-ups pending
+          </p>
+        </div>
+        <div className="ml-auto flex gap-2">
+          <Button asChild variant="outline" size="sm">
+            <Link to="/follow-ups">
+              <BellRing className="size-4" /> Follow-ups
+            </Link>
+          </Button>
+          <Button asChild size="sm">
+            <Link to="/new-enquiry">
+              <PlusCircle className="size-4" /> New enquiry
+            </Link>
+          </Button>
+        </div>
       </div>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <h2 className="text-lg font-semibold">Latest enquiries</h2>
-          <div className="mt-3 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
+      {isLoading ? (
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-28 w-full rounded-xl" />
+          ))}
+        </div>
+      ) : (
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          <KpiCard
+            label="New enquiries"
+            value={String(countBy("new"))}
+            tone="blue"
+            icon={ListChecks}
+            delta={pct(todayRows.length, yRows.length)}
+            hint="today vs yesterday"
+          />
+          <KpiCard
+            label="Pending calls"
+            value={String(countBy("contact_required"))}
+            tone="rose"
+            icon={PhoneCall}
+          />
+          <KpiCard
+            label="Confirmed"
+            value={String(countBy("confirmed"))}
+            tone="green"
+            icon={CheckCircle2}
+          />
+          <KpiCard
+            label="Follow-ups"
+            value={String(followUps.length)}
+            tone="violet"
+            icon={BellRing}
+          />
+          <KpiCard
+            label="Not converted"
+            value={String(countBy("not_converted"))}
+            tone="teal"
+            icon={XCircle}
+          />
+          <KpiCard
+            label="Enquiry value"
+            value={inr(value)}
+            tone="green"
+            icon={IndianRupee}
+            hint="all time"
+          />
+        </div>
+      )}
+
+      <div className="mt-4 grid min-w-0 gap-4 xl:grid-cols-3">
+        <section className="min-w-0 overflow-hidden rounded-xl border border-border bg-card shadow-sm xl:col-span-2">
+          <header className="border-b border-border px-4 py-3">
+            <h2 className="text-sm font-semibold">Last 14 days</h2>
+            <p className="text-[11px] text-muted-foreground">Enquiries received per day</p>
+          </header>
+          <div className="h-64 w-full min-w-0 p-3">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={trend} margin={{ top: 8, right: 8, bottom: 0, left: -20 }}>
+                <defs>
+                  <linearGradient id="dash-grad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--report-blue)" stopOpacity={0.35} />
+                    <stop offset="100%" stopColor="var(--report-blue)" stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
+                <XAxis
+                  dataKey="day"
+                  stroke="var(--muted-foreground)"
+                  fontSize={11}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  allowDecimals={false}
+                  width={40}
+                  stroke="var(--muted-foreground)"
+                  fontSize={11}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <RTooltip
+                  contentStyle={{
+                    background: "var(--card)",
+                    border: "1px solid var(--border)",
+                    borderRadius: 12,
+                    fontSize: 12,
+                  }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="enquiries"
+                  name="Enquiries"
+                  stroke="var(--report-blue)"
+                  strokeWidth={2}
+                  fill="url(#dash-grad)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </section>
+
+        <section className="min-w-0 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+          <header className="border-b border-border px-4 py-3">
+            <h2 className="text-sm font-semibold">Pipeline</h2>
+            <p className="text-[11px] text-muted-foreground">Share of enquiries by stage</p>
+          </header>
+          <div className="h-52 w-full min-w-0 p-3">
+            {statusPie.length === 0 ? (
+              <p className="py-10 text-center text-sm text-muted-foreground">No enquiries yet.</p>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={statusPie}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius="52%"
+                    outerRadius="80%"
+                    paddingAngle={2}
+                  >
+                    {statusPie.map((_, i) => (
+                      <Cell key={i} fill={PALETTE[i % PALETTE.length]} stroke="var(--card)" />
+                    ))}
+                  </Pie>
+                  <RTooltip
+                    contentStyle={{
+                      background: "var(--card)",
+                      border: "1px solid var(--border)",
+                      borderRadius: 12,
+                      fontSize: 12,
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+          <ul className="divide-y divide-border border-t border-border text-sm">
+            {PIPELINE.map((p) => (
+              <li key={p.key} className="flex items-center justify-between px-4 py-1.5">
+                <span className="text-muted-foreground">{p.label}</span>
+                <span className="font-semibold tabular-nums">{countBy(p.key)}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
+
+      <div className="mt-4 grid gap-4 xl:grid-cols-3">
+        <section className="overflow-hidden rounded-xl border border-border bg-card shadow-sm xl:col-span-2">
+          <header className="border-b border-border px-4 py-3">
+            <h2 className="text-sm font-semibold">Latest enquiries</h2>
+          </header>
+          <div className="divide-y divide-border">
             {isLoading
               ? Array.from({ length: 5 }).map((_, i) => (
                   <div key={i} className="space-y-2 p-4">
@@ -85,11 +281,16 @@ function Dashboard() {
                     key={r.id}
                     to="/enquiries/$id"
                     params={{ id: r.id }}
-                    className="block p-4 hover:bg-accent/40"
+                    className="block p-3.5 hover:bg-accent/40"
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-semibold">{r.name}</span>
-                      <span className="text-xs text-muted-foreground">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="truncate text-sm font-semibold">{r.name}</span>
+                      <span
+                        className={cn(
+                          "shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-semibold",
+                          STATUS_TONE[r.status],
+                        )}
+                      >
                         {STATUS_LABEL[r.status]}
                       </span>
                     </div>
@@ -103,22 +304,25 @@ function Dashboard() {
               <p className="p-6 text-sm text-muted-foreground">No enquiries yet.</p>
             )}
           </div>
-        </div>
+        </section>
 
-        <div>
-          <h2 className="text-lg font-semibold">Follow-ups</h2>
-          <div className="mt-3 space-y-2">
+        <section className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+          <header className="flex items-center justify-between border-b border-border px-4 py-3">
+            <h2 className="text-sm font-semibold">Upcoming follow-ups</h2>
+            <Link to="/follow-ups" className="text-[11px] font-semibold text-report-blue">
+              View all
+            </Link>
+          </header>
+          <div className="divide-y divide-border">
             {followUps.length === 0 && (
-              <p className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">
-                No follow-ups scheduled.
-              </p>
+              <p className="p-6 text-sm text-muted-foreground">No follow-ups scheduled.</p>
             )}
-            {followUps.map((f) => (
+            {followUps.slice(0, 8).map((f) => (
               <Link
                 key={f.id}
                 to="/enquiries/$id"
                 params={{ id: f.id }}
-                className="block rounded-xl border border-border bg-card p-3 text-sm hover:bg-accent/40"
+                className="block p-3.5 text-sm hover:bg-accent/40"
               >
                 <span className="font-medium">
                   {new Date(f.follow_up_at!).toLocaleString("en-IN", {
@@ -127,22 +331,14 @@ function Dashboard() {
                     hour: "2-digit",
                     minute: "2-digit",
                   })}
-                </span>{" "}
-                — {f.name} · {f.mobile}
+                </span>
+                <p className="text-xs text-muted-foreground">
+                  {f.name} · {f.mobile}
+                </p>
               </Link>
             ))}
           </div>
-
-          <h2 className="mt-6 text-lg font-semibold">Pipeline</h2>
-          <div className="mt-3 space-y-1 rounded-2xl border border-border bg-card p-4 text-sm">
-            {PIPELINE.map((p) => (
-              <div key={p.key} className="flex justify-between">
-                <span className="text-muted-foreground">{p.label}</span>
-                <span className="font-semibold">{countBy(p.key)}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+        </section>
       </div>
     </AdminShell>
   );
