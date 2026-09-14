@@ -225,7 +225,13 @@ function Pipeline() {
                       <Skeleton key={i} className="h-24 w-full rounded-xl" />
                     ))}
                   {items.map((r) => (
-                    <div key={r.id} className="rounded-xl border border-border bg-card p-3">
+                    <div
+                      key={r.id}
+                      className={cn(
+                        "rounded-xl border bg-card p-3",
+                        r.seen_at ? "border-border" : "border-report-rose/40 bg-report-rose/5",
+                      )}
+                    >
                       <Link to="/enquiries/$id" params={{ id: r.id }} className="block">
                         <div className="flex items-start justify-between gap-2">
                           <p className="truncate text-sm font-semibold">{r.name}</p>
