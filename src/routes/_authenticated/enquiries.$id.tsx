@@ -322,7 +322,7 @@ function EnquiryDetail() {
                           pincode: e.pincode,
                         },
                         lines: items.map((i) => ({ name: i.product_name, qty: i.qty })),
-                        total: quotedValue,
+                        total: billAmount,
                         fileName: `Delivery-Slip-${e.ref}.pdf`,
                       });
                     } catch {
