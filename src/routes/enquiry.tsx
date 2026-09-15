@@ -440,7 +440,7 @@ function EnquiryPage() {
                       <Button
                         size="sm"
                         className="mt-1.5 h-7 w-full text-[11px]"
-                        onClick={() => addProduct(p, dealPrice, mrp)}
+                        onClick={() => addProduct(p, dealPrice, mrp, "deal")}
                       >
                         {t("add")}
                       </Button>
@@ -475,7 +475,7 @@ function EnquiryPage() {
                         size="sm"
                         variant="secondary"
                         className="mt-1.5 h-7 w-full text-[11px]"
-                        onClick={() => addProduct(p, Number(p.price))}
+                        onClick={() => addProduct(p, Number(p.price), null, "addon")}
                       >
                         {t("add")}
                       </Button>

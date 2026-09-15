@@ -134,7 +134,8 @@ function Dashboard() {
           />
           <KpiCard
             label="Pending calls"
-            value={String(countBy("contact_required"))}
+            value={String(countBy("new") + countBy("contact_required"))}
+            hint="New + contact required"
             tone="rose"
             icon={PhoneCall}
           />
