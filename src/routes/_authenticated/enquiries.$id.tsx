@@ -16,6 +16,15 @@ import { toast } from "sonner";
 import { AdminShell } from "@/components/admin-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { PAYMENT_METHODS, PAYMENT_METHOD_LABEL } from "@/lib/payments";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,6 +54,8 @@ function EnquiryDetail() {
   const [note, setNote] = useState("");
   const [followUp, setFollowUp] = useState("");
   const [editing, setEditing] = useState(false);
+  const [finalInput, setFinalInput] = useState("");
+  const [pay, setPay] = useState({ amount: "", method: "upi", reference: "", note: "" });
 
   const enquiry = useQuery({
     queryKey: ["admin", "enquiry", id],
@@ -58,6 +69,20 @@ function EnquiryDetail() {
       return data;
     },
   });
+
+  const payments = useQuery({
+    queryKey: ["admin", "payments", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("payments")
+        .select("*")
+        .eq("enquiry_id", id)
+        .order("paid_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ["admin"] });
@@ -104,6 +129,34 @@ function EnquiryDetail() {
     });
   };
 
+  const addPayment = useMutation({
+    mutationFn: async (row: {
+      amount: number;
+      method: string;
+      reference: string | null;
+      note: string | null;
+    }) => {
+      const { error } = await supabase.from("payments").insert({ enquiry_id: id, ...row });
+      if (error) throw error;
+      logEdit(`Payment recorded: ${inr(row.amount)} via ${row.method}`);
+    },
+    onSuccess: () => {
+      setPay({ amount: "", method: "upi", reference: "", note: "" });
+      toast.success("Payment recorded");
+      invalidate();
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const deletePayment = useMutation({
+    mutationFn: async (paymentId: string) => {
+      const { error } = await supabase.from("payments").delete().eq("id", paymentId);
+      if (error) throw error;
+    },
+    onSuccess: invalidate,
+    onError: (err: Error) => toast.error(err.message),
+  });
+
   const itemMutation = useMutation({
     mutationFn: async ({
       itemId,
@@ -137,6 +190,9 @@ function EnquiryDetail() {
   const e = enquiry.data;
   const items = e.enquiry_items.filter((i) => !i.removed);
   const quotedValue = items.reduce((s, i) => s + i.qty * Number(i.unit_price), 0);
+  const billAmount = e.final_amount != null ? Number(e.final_amount) : quotedValue;
+  const collected = (payments.data ?? []).reduce((s, p) => s + Number(p.amount), 0);
+  const balance = Math.max(0, billAmount - collected);
   const quote = `Quotation for enquiry ${e.ref}\n${items
     .map((i) => `${i.product_name} x${i.qty} — ${inr(i.qty * Number(i.unit_price))}`)
     .join("\n")}\nTotal (indicative): ${inr(quotedValue)}\nSubject to final confirmation.`;
@@ -198,6 +254,43 @@ function EnquiryDetail() {
               </div>
             </div>
 
+            {/* Money summary, always visible at the top of the enquiry. */}
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-xl border border-border bg-report-blue/5 p-3">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  {e.final_amount != null ? "Final amount" : "Total amount"}
+                </p>
+                <p className="mt-1 text-2xl font-semibold tabular-nums text-report-blue">
+                  {inr(billAmount)}
+                </p>
+                {e.final_amount != null && (
+                  <p className="text-[11px] text-muted-foreground">
+                    Quoted {inr(quotedValue)} · {items.length} items
+                  </p>
+                )}
+              </div>
+              <div className="rounded-xl border border-border bg-report-green/5 p-3">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  Collected
+                </p>
+                <p className="mt-1 text-2xl font-semibold tabular-nums text-report-green">
+                  {inr(collected)}
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  {(payments.data ?? []).length} payment(s)
+                </p>
+              </div>
+              <div className="rounded-xl border border-border bg-report-rose/5 p-3">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  Balance due
+                </p>
+                <p className="mt-1 text-2xl font-semibold tabular-nums text-report-rose">
+                  {inr(balance)}
+                </p>
+              </div>
+            </div>
+
+
             <div className="mt-4 flex flex-wrap gap-2">
               <Button asChild size="lg">
                 <a href={`tel:${e.mobile}`}>
@@ -229,7 +322,7 @@ function EnquiryDetail() {
                           pincode: e.pincode,
                         },
                         lines: items.map((i) => ({ name: i.product_name, qty: i.qty })),
-                        total: quotedValue,
+                        total: billAmount,
                         fileName: `Delivery-Slip-${e.ref}.pdf`,
                       });
                     } catch {
@@ -459,7 +552,148 @@ function EnquiryDetail() {
           </div>
         </div>
 
-        <div>
+        <div className="space-y-5">
+          <div className="rounded-2xl border border-border bg-card p-5">
+            <h2 className="text-lg font-semibold">Payments</h2>
+
+            {/* Finalize the agreed amount before collecting money. */}
+            <div className="mt-3 rounded-xl border border-border p-3">
+              <Label className="text-xs text-muted-foreground">Final agreed amount</Label>
+              <div className="mt-1.5 flex gap-2">
+                <Input
+                  inputMode="decimal"
+                  placeholder={String(Math.round(quotedValue))}
+                  value={finalInput}
+                  onChange={(ev) => setFinalInput(ev.target.value)}
+                />
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    const amount = finalInput.trim() ? Number(finalInput) : quotedValue;
+                    if (!Number.isFinite(amount) || amount < 0) {
+                      toast.error("Enter a valid amount.");
+                      return;
+                    }
+                    update.mutate(
+                      { final_amount: amount },
+                      {
+                        onSuccess: () => {
+                          setFinalInput("");
+                          toast.success("Amount finalized");
+                          logEdit(`Final amount set to ${inr(amount)}`);
+                        },
+                      },
+                    );
+                  }}
+                >
+                  Finalize
+                </Button>
+              </div>
+              <p className="mt-1.5 text-[11px] text-muted-foreground">
+                Leave blank to finalize at the quoted {inr(quotedValue)}.
+              </p>
+            </div>
+
+            {/* Collect a full or part payment / advance. */}
+            <div className="mt-3 space-y-2 rounded-xl border border-border p-3">
+              <Label className="text-xs text-muted-foreground">Record a payment</Label>
+              <div className="flex gap-2">
+                <Input
+                  inputMode="decimal"
+                  placeholder={`Amount (due ${inr(balance)})`}
+                  value={pay.amount}
+                  onChange={(ev) => setPay({ ...pay, amount: ev.target.value })}
+                />
+                <Select value={pay.method} onValueChange={(v) => setPay({ ...pay, method: v })}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PAYMENT_METHODS.map((m) => (
+                      <SelectItem key={m} value={m}>
+                        {PAYMENT_METHOD_LABEL[m]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Input
+                placeholder="Reference / UTR (optional)"
+                value={pay.reference}
+                onChange={(ev) => setPay({ ...pay, reference: ev.target.value })}
+              />
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setPay({ ...pay, amount: String(Math.round(balance)) })}
+                >
+                  Full balance
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() =>
+                    setPay({ ...pay, amount: String(Math.round(balance / 2)) })
+                  }
+                >
+                  Half advance
+                </Button>
+                <Button
+                  size="sm"
+                  disabled={addPayment.isPending}
+                  onClick={() => {
+                    const amount = Number(pay.amount);
+                    if (!Number.isFinite(amount) || amount <= 0) {
+                      toast.error("Enter a valid amount.");
+                      return;
+                    }
+                    addPayment.mutate({
+                      amount,
+                      method: pay.method,
+                      reference: pay.reference.trim() || null,
+                      note: pay.note.trim() || null,
+                    });
+                  }}
+                >
+                  Add payment
+                </Button>
+              </div>
+            </div>
+
+            <div className="mt-3 divide-y divide-border">
+              {(payments.data ?? []).map((p) => (
+                <div key={p.id} className="flex items-center gap-2 py-2 text-sm">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium tabular-nums">
+                      {inr(Number(p.amount))}{" "}
+                      <span className="text-xs font-normal text-muted-foreground">
+                        · {PAYMENT_METHOD_LABEL[p.method] ?? p.method}
+                      </span>
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {new Date(p.paid_at).toLocaleString("en-IN")}
+                      {p.reference ? ` · ${p.reference}` : ""}
+                    </p>
+                  </div>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => deletePayment.mutate(p.id)}
+                    aria-label="Remove payment"
+                  >
+                    <X className="size-4" />
+                  </Button>
+                </div>
+              ))}
+              {(payments.data ?? []).length === 0 && (
+                <p className="py-4 text-center text-xs text-muted-foreground">
+                  No payments recorded yet.
+                </p>
+              )}
+            </div>
+          </div>
+
           <div className="rounded-2xl border border-border bg-card p-5">
             <h2 className="text-lg font-semibold">Internal notes</h2>
             <Textarea

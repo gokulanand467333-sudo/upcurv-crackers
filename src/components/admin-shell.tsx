@@ -14,6 +14,7 @@ import {
   StickyNote,
   Tags,
   TicketPercent,
+  Wallet,
   Zap,
 } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -46,6 +47,7 @@ const WORK_LINKS = [
   { to: "/enquiries", label: "Enquiries", icon: ListChecks },
   { to: "/follow-ups", label: "Follow-ups", icon: BellRing },
   { to: "/new-enquiry", label: "New enquiry", icon: PlusCircle },
+  { to: "/payments", label: "Payments", icon: Wallet },
   { to: "/reports", label: "Reports", icon: BarChart3 },
 ] as const;
 
