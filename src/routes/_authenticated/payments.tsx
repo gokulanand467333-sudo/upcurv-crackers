@@ -46,10 +46,12 @@ function PaymentsPage() {
   const enquiries = useQuery({
     queryKey: ["admin", "enquiries", "payments"],
     queryFn: async () => {
+      // Any enquiry can carry a balance once the amount is finalized or a part
+      // payment is taken — not just confirmed ones. Only "not converted" is out.
       const { data, error } = await supabase
         .from("enquiries")
         .select("id, ref, name, mobile, city, status, estimated_value, final_amount")
-        .in("status", ["confirmed", "ready", "completed"]);
+        .neq("status", "not_converted");
       if (error) throw error;
       return data;
     },
