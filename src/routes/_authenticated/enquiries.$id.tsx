@@ -54,6 +54,8 @@ function EnquiryDetail() {
   const [note, setNote] = useState("");
   const [followUp, setFollowUp] = useState("");
   const [editing, setEditing] = useState(false);
+  const [finalInput, setFinalInput] = useState("");
+  const [pay, setPay] = useState({ amount: "", method: "upi", reference: "", note: "" });
 
   const enquiry = useQuery({
     queryKey: ["admin", "enquiry", id],
