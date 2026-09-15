@@ -214,11 +214,9 @@ function EnquiryPage() {
       setOpen(false);
       setDone(record);
       clear();
-      try {
-        enquiryPdf(record);
-      } catch {
-        toast.error("Enquiry sent, but the PDF could not be generated.");
-      }
+      // Success screen always starts at the top; the PDF is a tap away instead of
+      // being generated inline (that blocked the screen for a second or two).
+      window.scrollTo({ top: 0, behavior: "auto" });
     },
     onError: () => toast.error("Could not send your enquiry. Please try again."),
   });
