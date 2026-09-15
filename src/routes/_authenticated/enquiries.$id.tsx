@@ -552,7 +552,148 @@ function EnquiryDetail() {
           </div>
         </div>
 
-        <div>
+        <div className="space-y-5">
+          <div className="rounded-2xl border border-border bg-card p-5">
+            <h2 className="text-lg font-semibold">Payments</h2>
+
+            {/* Finalize the agreed amount before collecting money. */}
+            <div className="mt-3 rounded-xl border border-border p-3">
+              <Label className="text-xs text-muted-foreground">Final agreed amount</Label>
+              <div className="mt-1.5 flex gap-2">
+                <Input
+                  inputMode="decimal"
+                  placeholder={String(Math.round(quotedValue))}
+                  value={finalInput}
+                  onChange={(ev) => setFinalInput(ev.target.value)}
+                />
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    const amount = finalInput.trim() ? Number(finalInput) : quotedValue;
+                    if (!Number.isFinite(amount) || amount < 0) {
+                      toast.error("Enter a valid amount.");
+                      return;
+                    }
+                    update.mutate(
+                      { final_amount: amount },
+                      {
+                        onSuccess: () => {
+                          setFinalInput("");
+                          toast.success("Amount finalized");
+                          logEdit(`Final amount set to ${inr(amount)}`);
+                        },
+                      },
+                    );
+                  }}
+                >
+                  Finalize
+                </Button>
+              </div>
+              <p className="mt-1.5 text-[11px] text-muted-foreground">
+                Leave blank to finalize at the quoted {inr(quotedValue)}.
+              </p>
+            </div>
+
+            {/* Collect a full or part payment / advance. */}
+            <div className="mt-3 space-y-2 rounded-xl border border-border p-3">
+              <Label className="text-xs text-muted-foreground">Record a payment</Label>
+              <div className="flex gap-2">
+                <Input
+                  inputMode="decimal"
+                  placeholder={`Amount (due ${inr(balance)})`}
+                  value={pay.amount}
+                  onChange={(ev) => setPay({ ...pay, amount: ev.target.value })}
+                />
+                <Select value={pay.method} onValueChange={(v) => setPay({ ...pay, method: v })}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PAYMENT_METHODS.map((m) => (
+                      <SelectItem key={m} value={m}>
+                        {PAYMENT_METHOD_LABEL[m]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Input
+                placeholder="Reference / UTR (optional)"
+                value={pay.reference}
+                onChange={(ev) => setPay({ ...pay, reference: ev.target.value })}
+              />
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setPay({ ...pay, amount: String(Math.round(balance)) })}
+                >
+                  Full balance
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() =>
+                    setPay({ ...pay, amount: String(Math.round(balance / 2)) })
+                  }
+                >
+                  Half advance
+                </Button>
+                <Button
+                  size="sm"
+                  disabled={addPayment.isPending}
+                  onClick={() => {
+                    const amount = Number(pay.amount);
+                    if (!Number.isFinite(amount) || amount <= 0) {
+                      toast.error("Enter a valid amount.");
+                      return;
+                    }
+                    addPayment.mutate({
+                      amount,
+                      method: pay.method,
+                      reference: pay.reference.trim() || null,
+                      note: pay.note.trim() || null,
+                    });
+                  }}
+                >
+                  Add payment
+                </Button>
+              </div>
+            </div>
+
+            <div className="mt-3 divide-y divide-border">
+              {(payments.data ?? []).map((p) => (
+                <div key={p.id} className="flex items-center gap-2 py-2 text-sm">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium tabular-nums">
+                      {inr(Number(p.amount))}{" "}
+                      <span className="text-xs font-normal text-muted-foreground">
+                        · {PAYMENT_METHOD_LABEL[p.method] ?? p.method}
+                      </span>
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {new Date(p.paid_at).toLocaleString("en-IN")}
+                      {p.reference ? ` · ${p.reference}` : ""}
+                    </p>
+                  </div>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => deletePayment.mutate(p.id)}
+                    aria-label="Remove payment"
+                  >
+                    <X className="size-4" />
+                  </Button>
+                </div>
+              ))}
+              {(payments.data ?? []).length === 0 && (
+                <p className="py-4 text-center text-xs text-muted-foreground">
+                  No payments recorded yet.
+                </p>
+              )}
+            </div>
+          </div>
+
           <div className="rounded-2xl border border-border bg-card p-5">
             <h2 className="text-lg font-semibold">Internal notes</h2>
             <Textarea
