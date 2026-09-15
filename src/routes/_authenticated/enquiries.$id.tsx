@@ -156,14 +156,20 @@ function EnquiryDetail() {
     onError: (err: Error) => toast.error(err.message),
   });
 
-  const deletePayment = useMutation({
-    mutationFn: async (paymentId: string) => {
-      const { error } = await supabase.from("payments").delete().eq("id", paymentId);
+  // Deal Store picks, so their special price can be flagged on the item list.
+  const dealProducts = useQuery({
+    queryKey: ["admin", "products", "deal-picks"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, deal_price")
+        .not("deal_rank", "is", null);
       if (error) throw error;
+      return data;
     },
-    onSuccess: invalidate,
-    onError: (err: Error) => toast.error(err.message),
   });
+
+
 
   const itemMutation = useMutation({
     mutationFn: async ({

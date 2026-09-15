@@ -146,6 +146,7 @@ function EnquiryPage() {
     p: (typeof pool)[number],
     price: number,
     strike?: number | null,
+    via: "deal" | "addon" | "other" = "other",
   ) => {
     add({
       productId: p.id,
@@ -158,6 +159,15 @@ function EnquiryPage() {
       imageUrl: p.image_url,
     });
     track("add_to_cart", { productId: p.id, productName: p.name, qty: 1, value: price });
+    // Strip-specific events so the reports only credit the Deal Store / add-on
+    // strips when the customer actually taps them here.
+    if (via === "deal" || via === "addon")
+      track(via === "deal" ? "deal_add" : "addon_add", {
+        productId: p.id,
+        productName: p.name,
+        qty: 1,
+        value: price,
+      });
     toast.success(`${p.name} added`);
   };
 
@@ -430,7 +440,7 @@ function EnquiryPage() {
                       <Button
                         size="sm"
                         className="mt-1.5 h-7 w-full text-[11px]"
-                        onClick={() => addProduct(p, dealPrice, mrp)}
+                        onClick={() => addProduct(p, dealPrice, mrp, "deal")}
                       >
                         {t("add")}
                       </Button>
@@ -465,7 +475,7 @@ function EnquiryPage() {
                         size="sm"
                         variant="secondary"
                         className="mt-1.5 h-7 w-full text-[11px]"
-                        onClick={() => addProduct(p, Number(p.price))}
+                        onClick={() => addProduct(p, Number(p.price), null, "addon")}
                       >
                         {t("add")}
                       </Button>

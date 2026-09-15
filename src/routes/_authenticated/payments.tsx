@@ -46,10 +46,12 @@ function PaymentsPage() {
   const enquiries = useQuery({
     queryKey: ["admin", "enquiries", "payments"],
     queryFn: async () => {
+      // Any enquiry can carry a balance once the amount is finalized or a part
+      // payment is taken — not just confirmed ones. Only "not converted" is out.
       const { data, error } = await supabase
         .from("enquiries")
         .select("id, ref, name, mobile, city, status, estimated_value, final_amount")
-        .in("status", ["confirmed", "ready", "completed"]);
+        .neq("status", "not_converted");
       if (error) throw error;
       return data;
     },
@@ -68,11 +70,20 @@ function PaymentsPage() {
       paidByEnquiry.set(p.enquiry_id, (paidByEnquiry.get(p.enquiry_id) ?? 0) + Number(p.amount));
     }
 
-    const billed = (enquiries.data ?? []).map((e) => {
-      const bill = e.final_amount != null ? Number(e.final_amount) : Number(e.estimated_value);
-      const paid = paidByEnquiry.get(e.id) ?? 0;
-      return { e, bill, paid, due: Math.max(0, bill - paid) };
-    });
+    const billed = (enquiries.data ?? [])
+      .map((e) => {
+        const bill = e.final_amount != null ? Number(e.final_amount) : Number(e.estimated_value);
+        const paid = paidByEnquiry.get(e.id) ?? 0;
+        return { e, bill, paid, due: Math.max(0, bill - paid) };
+      })
+      // Show a balance once money is expected: amount finalized, a payment
+      // already taken, or the order is confirmed / ready / completed.
+      .filter(
+        (b) =>
+          b.paid > 0 ||
+          b.e.final_amount != null ||
+          ["confirmed", "ready", "completed"].includes(b.e.status),
+      );
     const pending = billed.reduce((s, b) => s + b.due, 0);
 
     return {

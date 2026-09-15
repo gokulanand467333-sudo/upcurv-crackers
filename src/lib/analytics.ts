@@ -13,7 +13,15 @@ function sessionId() {
   return id;
 }
 
-export type EventKind = "page_view" | "add_to_cart" | "enquiry_start" | "enquiry_submit";
+export type EventKind =
+  | "page_view"
+  | "add_to_cart"
+  | "enquiry_start"
+  | "enquiry_submit"
+  /** Added from the Deal Store strip on the enquiry page only. */
+  | "deal_add"
+  /** Added from the Popular add-ons strip on the enquiry page only. */
+  | "addon_add";
 
 /** Fire-and-forget activity logging used by the seller reports page. */
 export function track(
