@@ -273,7 +273,7 @@ function ReportsPage() {
     (e) => e.city,
     () => 1,
   )
-    .slice(0, 8)
+    .slice(0, 5)
     .map(([name, value]) => ({ name, value }));
 
   const daily = (() => {
@@ -651,7 +651,7 @@ function ReportsPage() {
 
             <Panel
               title="Add-on & Deal Store performance"
-              subtitle="How the enquiry-page strips contribute"
+              subtitle="Only items added by tapping these strips on the website"
             >
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-xl bg-report-teal/10 p-3">
