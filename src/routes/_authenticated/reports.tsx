@@ -160,16 +160,6 @@ function ReportsPage() {
     },
   });
 
-  const placement = useQuery({
-    queryKey: ["admin", "products", "placement"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select("id, name, addon_rank, deal_rank, deal_price, price");
-      if (error) throw error;
-      return data;
-    },
-  });
 
   const loading = events.isLoading || enquiries.isLoading;
   const allEv = events.data ?? [];
