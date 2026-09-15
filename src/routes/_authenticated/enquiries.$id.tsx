@@ -129,6 +129,34 @@ function EnquiryDetail() {
     });
   };
 
+  const addPayment = useMutation({
+    mutationFn: async (row: {
+      amount: number;
+      method: string;
+      reference: string | null;
+      note: string | null;
+    }) => {
+      const { error } = await supabase.from("payments").insert({ enquiry_id: id, ...row });
+      if (error) throw error;
+      logEdit(`Payment recorded: ${inr(row.amount)} via ${row.method}`);
+    },
+    onSuccess: () => {
+      setPay({ amount: "", method: "upi", reference: "", note: "" });
+      toast.success("Payment recorded");
+      invalidate();
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const deletePayment = useMutation({
+    mutationFn: async (paymentId: string) => {
+      const { error } = await supabase.from("payments").delete().eq("id", paymentId);
+      if (error) throw error;
+    },
+    onSuccess: invalidate,
+    onError: (err: Error) => toast.error(err.message),
+  });
+
   const itemMutation = useMutation({
     mutationFn: async ({
       itemId,
