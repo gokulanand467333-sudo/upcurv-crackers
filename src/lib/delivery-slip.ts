@@ -87,23 +87,14 @@ export function downloadDeliverySlip({ ref, customer, lines, total, fileName }: 
   doc.line(R - 70, y, R - 70, y + rowH);
   y += rowH;
 
+  // Single aggregated row — the slip shows only the total cracker quantity.
+  const totalQty = lines.reduce((s, l) => s + (l.qty || 0), 0);
   doc.setFont("helvetica", "normal");
-  for (const line of lines) {
-    if (y + rowH > 760) {
-      doc.addPage();
-      y = 40;
-    }
-    frame(y, rowH);
-    doc.line(R - 70, y, R - 70, y + rowH);
-    doc.text(doc.splitTextToSize(line.name, W - 100)[0] ?? line.name, L + 14, y + 15);
-    doc.text(String(line.qty), R - 14, y + 15, { align: "right" });
-    y += rowH;
-  }
-  if (!lines.length) {
-    frame(y, rowH);
-    doc.text("No items", L + 14, y + 15);
-    y += rowH;
-  }
+  frame(y, rowH);
+  doc.line(R - 70, y, R - 70, y + rowH);
+  doc.text("Crackers", L + 14, y + 15);
+  doc.text(String(totalQty), R - 14, y + 15, { align: "right" });
+  y += rowH;
 
   // Total
   frame(y, 26);
