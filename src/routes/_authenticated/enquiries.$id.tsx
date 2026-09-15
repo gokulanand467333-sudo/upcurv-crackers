@@ -29,6 +29,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { PIPELINE, STATUS_LABEL, STATUS_TONE, waLink, type EnquiryStatus } from "@/lib/admin";
+import { logAudit } from "@/lib/audit";
 import type { TablesUpdate } from "@/integrations/supabase/types";
 import { downloadDeliverySlip } from "@/lib/delivery-slip";
 import { downloadSummaryPdf } from "@/lib/enquiry-pdf";
@@ -121,11 +122,18 @@ function EnquiryDetail() {
     },
   });
 
-  /** Every edit is logged automatically in the internal notes trail. */
-  const logEdit = (text: string) => {
+  /** Every edit is logged automatically in the internal notes trail and the activity log. */
+  const logEdit = (text: string, action = "update") => {
     void supabase.from("enquiry_notes").insert({
       enquiry_id: id,
       note: `[edit] ${text}`,
+    });
+    void logAudit({
+      entity: "enquiry",
+      entityId: id,
+      entityLabel: enquiry.data?.ref ?? enquiry.data?.name ?? null,
+      action,
+      detail: text,
     });
   };
 
@@ -190,16 +198,30 @@ function EnquiryDetail() {
   const e = enquiry.data;
   const items = e.enquiry_items.filter((i) => !i.removed);
   const quotedValue = items.reduce((s, i) => s + i.qty * Number(i.unit_price), 0);
-  const billAmount = e.final_amount != null ? Number(e.final_amount) : quotedValue;
+  const totalQty = items.reduce((s, i) => s + i.qty, 0);
+  const discount = Number(e.discount_amount ?? 0);
+  const delivery = Number(e.delivery_charge ?? 0);
+  const payableValue = Math.max(0, quotedValue - discount) + delivery;
+  const billAmount = e.final_amount != null ? Number(e.final_amount) : payableValue;
   const collected = (payments.data ?? []).reduce((s, p) => s + Number(p.amount), 0);
   const balance = Math.max(0, billAmount - collected);
+  const paymentsDisabled = e.status === "not_converted";
   const quote = `Quotation for enquiry ${e.ref}\n${items
     .map((i) => `${i.product_name} x${i.qty} — ${inr(i.qty * Number(i.unit_price))}`)
     .join("\n")}\nTotal (indicative): ${inr(quotedValue)}\nSubject to final confirmation.`;
 
   const setStatus = (status: EnquiryStatus) => {
     if (status === e.status) return;
-    update.mutate({ status }, { onSuccess: () => logEdit(`Status changed to ${STATUS_LABEL[status]}`) });
+    update.mutate(
+      { status },
+      {
+        onSuccess: () =>
+          logEdit(
+            `Status changed from ${STATUS_LABEL[e.status]} to ${STATUS_LABEL[status]}`,
+            "status",
+          ),
+      },
+    );
   };
 
   return (
@@ -322,6 +344,10 @@ function EnquiryDetail() {
                           pincode: e.pincode,
                         },
                         lines: items.map((i) => ({ name: i.product_name, qty: i.qty })),
+                        subtotal: quotedValue,
+                        couponCode: e.coupon_code,
+                        discount,
+                        deliveryCharge: delivery,
                         total: billAmount,
                         fileName: `Delivery-Slip-${e.ref}.pdf`,
                       });
@@ -479,6 +505,57 @@ function EnquiryDetail() {
                 </p>
               )}
             </div>
+
+            {/* Bill breakdown: quantity, goods value, coupon, delivery charge, payable. */}
+            <div className="mt-4 rounded-xl border border-border bg-muted/40 p-4">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Total quantity</span>
+                <span className="font-semibold tabular-nums">{totalQty} pcs</span>
+              </div>
+              <div className="mt-1.5 flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Total value ({items.length} items)</span>
+                <span className="font-semibold tabular-nums">{inr(quotedValue)}</span>
+              </div>
+              {discount > 0 && (
+                <div className="mt-1.5 flex items-center justify-between text-sm text-report-green">
+                  <span>Coupon {e.coupon_code ?? ""} applied</span>
+                  <span className="font-semibold tabular-nums">− {inr(discount)}</span>
+                </div>
+              )}
+              <div className="mt-1.5 flex items-center justify-between gap-3 text-sm">
+                <span className="text-muted-foreground">Delivery charge</span>
+                {editing ? (
+                  <Input
+                    inputMode="decimal"
+                    className="h-8 w-28 text-right"
+                    defaultValue={delivery ? String(delivery) : ""}
+                    placeholder="0"
+                    onBlur={(ev) => {
+                      const next = Number(ev.target.value || 0);
+                      if (!Number.isFinite(next) || next < 0 || next === delivery) return;
+                      update.mutate(
+                        { delivery_charge: next },
+                        {
+                          onSuccess: () =>
+                            logEdit(`Delivery charge ${inr(delivery)} → ${inr(next)}`),
+                        },
+                      );
+                    }}
+                  />
+                ) : (
+                  <span className="font-semibold tabular-nums">
+                    {delivery > 0 ? `+ ${inr(delivery)}` : "Not charged"}
+                  </span>
+                )}
+              </div>
+              <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+                <span className="text-sm font-semibold">Bill value</span>
+                <span className="text-xl font-semibold tabular-nums text-report-blue">
+                  {inr(payableValue)}
+                </span>
+              </div>
+            </div>
+
             {editing && (
               <div className="mt-4 flex flex-wrap gap-2">
                 <Button
@@ -486,7 +563,7 @@ function EnquiryDetail() {
                   onClick={() =>
                     update.mutate(
                       {
-                        estimated_value: quotedValue,
+                        estimated_value: payableValue,
                         item_count: items.reduce((s, i) => s + i.qty, 0),
                       },
                       { onSuccess: () => logEdit(`Totals revised to ${inr(quotedValue)}`) },
@@ -500,7 +577,7 @@ function EnquiryDetail() {
                     update.mutate(
                       {
                         status: "confirmed",
-                        estimated_value: quotedValue,
+                        estimated_value: payableValue,
                         item_count: items.reduce((s, i) => s + i.qty, 0),
                       },
                       {
@@ -556,20 +633,29 @@ function EnquiryDetail() {
           <div className="rounded-2xl border border-border bg-card p-5">
             <h2 className="text-lg font-semibold">Payments</h2>
 
+            {paymentsDisabled && (
+              <p className="mt-3 rounded-xl border border-dashed border-border bg-muted/40 p-3 text-sm text-muted-foreground">
+                This enquiry is marked <span className="font-medium">Not Converted</span> — no
+                payment is needed.
+              </p>
+            )}
+
+            {!paymentsDisabled && (
+              <>
             {/* Finalize the agreed amount before collecting money. */}
             <div className="mt-3 rounded-xl border border-border p-3">
               <Label className="text-xs text-muted-foreground">Final agreed amount</Label>
               <div className="mt-1.5 flex gap-2">
                 <Input
                   inputMode="decimal"
-                  placeholder={String(Math.round(quotedValue))}
+                  placeholder={String(Math.round(payableValue))}
                   value={finalInput}
                   onChange={(ev) => setFinalInput(ev.target.value)}
                 />
                 <Button
                   variant="secondary"
                   onClick={() => {
-                    const amount = finalInput.trim() ? Number(finalInput) : quotedValue;
+                    const amount = finalInput.trim() ? Number(finalInput) : payableValue;
                     if (!Number.isFinite(amount) || amount < 0) {
                       toast.error("Enter a valid amount.");
                       return;
@@ -590,7 +676,7 @@ function EnquiryDetail() {
                 </Button>
               </div>
               <p className="mt-1.5 text-[11px] text-muted-foreground">
-                Leave blank to finalize at the quoted {inr(quotedValue)}.
+                Leave blank to finalize at the bill value {inr(payableValue)} (includes delivery and coupon).
               </p>
             </div>
 
@@ -648,6 +734,11 @@ function EnquiryDetail() {
                       toast.error("Enter a valid amount.");
                       return;
                     }
+                    // A payment can never be larger than the amount still due.
+                    if (amount > balance + 0.5) {
+                      toast.error(`Amount cannot be more than the balance due (${inr(balance)}).`);
+                      return;
+                    }
                     addPayment.mutate({
                       amount,
                       method: pay.method,
@@ -659,7 +750,13 @@ function EnquiryDetail() {
                   Add payment
                 </Button>
               </div>
+              <p className="text-[11px] text-muted-foreground">
+                Maximum you can record now: <span className="font-medium">{inr(balance)}</span>
+              </p>
             </div>
+              </>
+            )}
+
 
             <div className="mt-3 divide-y divide-border">
               {(payments.data ?? []).map((p) => (

@@ -145,6 +145,32 @@ function ReportsPage() {
     },
   });
 
+  // Items actually enquired (ordered), plus catalogue placement so we can
+  // measure how the add-on strip and Deal Store are performing.
+  const enquiredItems = useQuery({
+    queryKey: ["admin", "enquiry_items", "reports", range],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("enquiry_items")
+        .select("product_id, product_name, qty, unit_price, removed, enquiries!inner(created_at)")
+        .gte("enquiries.created_at", since)
+        .limit(8000);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const placement = useQuery({
+    queryKey: ["admin", "products", "placement"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, name, addon_rank, deal_rank, deal_price, price");
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const loading = events.isLoading || enquiries.isLoading;
   const allEv = events.data ?? [];
   const allEnq = enquiries.data ?? [];
@@ -195,12 +221,49 @@ function ReportsPage() {
     return [...map.entries()].sort((a, b) => b[1] - a[1]);
   };
 
+  const soldLines = (enquiredItems.data ?? []).filter((r) => !r.removed);
+
   const topProducts = group(
-    adds,
-    (e) => e.product_name ?? "Unknown",
-    (e) => Math.max(1, e.qty),
+    soldLines,
+    (r) => r.product_name ?? "Unknown",
+    (r) => Math.max(1, r.qty),
   )
     .slice(0, 8)
+    .map(([name, value]) => ({ name, value }));
+
+  // Add-on strip vs Deal Store contribution to enquiries.
+  const addonIds = new Set(
+    (placement.data ?? []).filter((p) => p.addon_rank != null).map((p) => p.id),
+  );
+  const dealIds = new Set(
+    (placement.data ?? []).filter((p) => p.deal_rank != null).map((p) => p.id),
+  );
+  const strip = (ids: Set<string>) => {
+    const lines = soldLines.filter((r) => r.product_id && ids.has(r.product_id));
+    return {
+      qty: lines.reduce((s, r) => s + r.qty, 0),
+      value: lines.reduce((s, r) => s + r.qty * Number(r.unit_price ?? 0), 0),
+      lines: lines.length,
+    };
+  };
+  const addonStats = strip(addonIds);
+  const dealStats = strip(dealIds);
+  const totalLineValue = soldLines.reduce((s, r) => s + r.qty * Number(r.unit_price ?? 0), 0);
+
+  const topDealProducts = group(
+    soldLines.filter((r) => r.product_id && dealIds.has(r.product_id)),
+    (r) => r.product_name ?? "Unknown",
+    (r) => r.qty * Number(r.unit_price ?? 0),
+  )
+    .slice(0, 6)
+    .map(([name, value]) => ({ name, value }));
+
+  const topAddonProducts = group(
+    soldLines.filter((r) => r.product_id && addonIds.has(r.product_id)),
+    (r) => r.product_name ?? "Unknown",
+    (r) => r.qty * Number(r.unit_price ?? 0),
+  )
+    .slice(0, 6)
     .map(([name, value]) => ({ name, value }));
 
   const bySource = group(
@@ -229,25 +292,29 @@ function ReportsPage() {
     .slice(0, 8)
     .map(([name, value]) => ({ name, value }));
 
-  const byPath = group(
-    views,
-    (e) => e.path ?? "/",
-    () => 1,
-  )
-    .slice(0, 8)
-    .map(([name, value]) => ({ name, value }));
-
   const daily = (() => {
-    const map = new Map<string, { day: string; views: number; adds: number; enquiries: number }>();
+    const map = new Map<
+      string,
+      { day: string; visitors: number; views: number; adds: number; enquiries: number }
+    >();
+    const seen = new Map<string, Set<string>>();
     for (let i = days - 1; i >= 0; i--) {
       const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
-      map.set(d, { day: d.slice(5), views: 0, adds: 0, enquiries: 0 });
+      map.set(d, { day: d.slice(5), visitors: 0, views: 0, adds: 0, enquiries: 0 });
+      seen.set(d, new Set());
     }
     for (const e of ev) {
-      const row = map.get(e.created_at.slice(0, 10));
+      const key = e.created_at.slice(0, 10);
+      const row = map.get(key);
       if (!row) continue;
       if (e.kind === "page_view") row.views += 1;
       if (e.kind === "add_to_cart") row.adds += 1;
+      // A visitor counts once per day, whatever they did.
+      const bucket = seen.get(key)!;
+      if (!bucket.has(e.session_id)) {
+        bucket.add(e.session_id);
+        row.visitors += 1;
+      }
     }
     for (const e of enq) {
       const row = map.get(e.created_at.slice(0, 10));
@@ -377,7 +444,7 @@ function ReportsPage() {
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={daily} margin={{ top: 10, right: 8, bottom: 0, left: -18 }}>
                     <defs>
-                      {["blue", "teal", "green"].map((c) => (
+                      {["blue", "teal", "green", "violet"].map((c) => (
                         <linearGradient key={c} id={`g-${c}`} x1="0" y1="0" x2="0" y2="1">
                           <stop offset="0%" stopColor={`var(--report-${c})`} stopOpacity={0.35} />
                           <stop offset="100%" stopColor={`var(--report-${c})`} stopOpacity={0.02} />
@@ -389,6 +456,14 @@ function ReportsPage() {
                     <YAxis allowDecimals={false} width={44} {...AXIS} />
                     <RTooltip {...tooltipStyle()} />
                     <Legend wrapperStyle={{ fontSize: 11 }} />
+                    <Area
+                      type="monotone"
+                      dataKey="visitors"
+                      name="Visitors"
+                      stroke="var(--report-violet)"
+                      fill="url(#g-violet)"
+                      strokeWidth={2}
+                    />
                     <Area
                       type="monotone"
                       dataKey="views"
@@ -472,8 +547,8 @@ function ReportsPage() {
             </Panel>
 
             <Panel
-              title="Top products added to cart"
-              subtitle="Quantity added"
+              title="Top products enquired"
+              subtitle="Quantity requested in enquiries"
               className="xl:col-span-2"
             >
               {topProducts.length === 0 ? (
@@ -590,23 +665,81 @@ function ReportsPage() {
               )}
             </Panel>
 
-            <Panel title="Most viewed pages" subtitle="Page views in this period">
-              {byPath.length === 0 ? (
-                <Empty />
-              ) : (
-                <ul className="divide-y divide-border">
-                  {byPath.map((p, i) => (
-                    <li key={p.name} className="flex items-center gap-3 py-2 text-sm">
-                      <span
-                        className="size-2 shrink-0 rounded-full"
-                        style={{ background: PALETTE[i % PALETTE.length] }}
-                      />
-                      <span className="truncate">{p.name}</span>
-                      <span className="ml-auto shrink-0 font-semibold tabular-nums">{p.value}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
+            <Panel
+              title="Add-on & Deal Store performance"
+              subtitle="How the enquiry-page strips contribute"
+            >
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl bg-report-teal/10 p-3">
+                  <p className="text-[11px] font-medium text-report-teal">Add-on strip</p>
+                  <p className="text-lg font-bold tabular-nums text-report-teal">
+                    {inr(addonStats.value)}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {addonStats.qty} pcs ·{" "}
+                    {totalLineValue ? Math.round((addonStats.value / totalLineValue) * 100) : 0}% of
+                    value
+                  </p>
+                </div>
+                <div className="rounded-xl bg-report-violet/10 p-3">
+                  <p className="text-[11px] font-medium text-report-violet">Deal Store</p>
+                  <p className="text-lg font-bold tabular-nums text-report-violet">
+                    {inr(dealStats.value)}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {dealStats.qty} pcs ·{" "}
+                    {totalLineValue ? Math.round((dealStats.value / totalLineValue) * 100) : 0}% of
+                    value
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-3 space-y-3">
+                <div>
+                  <p className="text-[11px] font-semibold text-muted-foreground">
+                    Top Deal Store picks
+                  </p>
+                  {topDealProducts.length === 0 ? (
+                    <p className="py-2 text-xs text-muted-foreground">No deal picks enquired yet.</p>
+                  ) : (
+                    <ul className="divide-y divide-border">
+                      {topDealProducts.map((p, i) => (
+                        <li key={p.name} className="flex items-center gap-2 py-1.5 text-sm">
+                          <span
+                            className="size-2 shrink-0 rounded-full"
+                            style={{ background: PALETTE[i % PALETTE.length] }}
+                          />
+                          <span className="truncate">{p.name}</span>
+                          <span className="ml-auto shrink-0 font-semibold tabular-nums">
+                            {inr(p.value)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold text-muted-foreground">Top add-ons</p>
+                  {topAddonProducts.length === 0 ? (
+                    <p className="py-2 text-xs text-muted-foreground">No add-ons enquired yet.</p>
+                  ) : (
+                    <ul className="divide-y divide-border">
+                      {topAddonProducts.map((p, i) => (
+                        <li key={p.name} className="flex items-center gap-2 py-1.5 text-sm">
+                          <span
+                            className="size-2 shrink-0 rounded-full"
+                            style={{ background: PALETTE[(i + 2) % PALETTE.length] }}
+                          />
+                          <span className="truncate">{p.name}</span>
+                          <span className="ml-auto shrink-0 font-semibold tabular-nums">
+                            {inr(p.value)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
             </Panel>
           </div>
         </>

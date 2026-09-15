@@ -17,6 +17,7 @@ import { Route as CatalogueRouteImport } from './routes/catalogue'
 import { Route as CombosRouteImport } from './routes/combos'
 import { Route as EnquiryRouteImport } from './routes/enquiry'
 import { Route as TrackRouteImport } from './routes/track'
+import { Route as AuthenticatedAuditLogsRouteImport } from './routes/_authenticated/audit-logs'
 import { Route as AuthenticatedCategoriesRouteImport } from './routes/_authenticated/categories'
 import { Route as AuthenticatedCouponsRouteImport } from './routes/_authenticated/coupons'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -28,6 +29,7 @@ import { Route as AuthenticatedNewEnquiryRouteImport } from './routes/_authentic
 import { Route as AuthenticatedPaymentsRouteImport } from './routes/_authenticated/payments'
 import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticated/products'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as AuthenticatedSeoManagerRouteImport } from './routes/_authenticated/seo-manager'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as CombosIndexRouteImport } from './routes/combos.index'
 import { Route as CombosSlugRouteImport } from './routes/combos.$slug'
@@ -72,6 +74,11 @@ const TrackRoute = TrackRouteImport.update({
   id: '/track',
   path: '/track',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAuditLogsRoute = AuthenticatedAuditLogsRouteImport.update({
+  id: '/audit-logs',
+  path: '/audit-logs',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedCategoriesRoute = AuthenticatedCategoriesRouteImport.update({
   id: '/categories',
@@ -129,6 +136,11 @@ const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSeoManagerRoute = AuthenticatedSeoManagerRouteImport.update({
+  id: '/seo-manager',
+  path: '/seo-manager',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -165,6 +177,7 @@ export interface FileRoutesByFullPath {
   '/combos': typeof CombosRouteWithChildren
   '/enquiry': typeof EnquiryRoute
   '/track': typeof TrackRoute
+  '/audit-logs': typeof AuthenticatedAuditLogsRoute
   '/categories': typeof AuthenticatedCategoriesRoute
   '/coupons': typeof AuthenticatedCouponsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -176,6 +189,7 @@ export interface FileRoutesByFullPath {
   '/payments': typeof AuthenticatedPaymentsRoute
   '/products': typeof AuthenticatedProductsRoute
   '/reports': typeof AuthenticatedReportsRoute
+  '/seo-manager': typeof AuthenticatedSeoManagerRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/combos/$slug': typeof CombosSlugRoute
   '/combos/': typeof CombosIndexRoute
@@ -189,6 +203,7 @@ export interface FileRoutesByTo {
   '/catalogue': typeof CatalogueRoute
   '/enquiry': typeof EnquiryRoute
   '/track': typeof TrackRoute
+  '/audit-logs': typeof AuthenticatedAuditLogsRoute
   '/categories': typeof AuthenticatedCategoriesRoute
   '/coupons': typeof AuthenticatedCouponsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -200,6 +215,7 @@ export interface FileRoutesByTo {
   '/payments': typeof AuthenticatedPaymentsRoute
   '/products': typeof AuthenticatedProductsRoute
   '/reports': typeof AuthenticatedReportsRoute
+  '/seo-manager': typeof AuthenticatedSeoManagerRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/combos/$slug': typeof CombosSlugRoute
   '/combos': typeof CombosIndexRoute
@@ -216,6 +232,7 @@ export interface FileRoutesById {
   '/combos': typeof CombosRouteWithChildren
   '/enquiry': typeof EnquiryRoute
   '/track': typeof TrackRoute
+  '/_authenticated/audit-logs': typeof AuthenticatedAuditLogsRoute
   '/_authenticated/categories': typeof AuthenticatedCategoriesRoute
   '/_authenticated/coupons': typeof AuthenticatedCouponsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -227,6 +244,7 @@ export interface FileRoutesById {
   '/_authenticated/payments': typeof AuthenticatedPaymentsRoute
   '/_authenticated/products': typeof AuthenticatedProductsRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
+  '/_authenticated/seo-manager': typeof AuthenticatedSeoManagerRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/combos/$slug': typeof CombosSlugRoute
   '/combos/': typeof CombosIndexRoute
@@ -243,6 +261,7 @@ export interface FileRouteTypes {
     | '/combos'
     | '/enquiry'
     | '/track'
+    | '/audit-logs'
     | '/categories'
     | '/coupons'
     | '/dashboard'
@@ -254,6 +273,7 @@ export interface FileRouteTypes {
     | '/payments'
     | '/products'
     | '/reports'
+    | '/seo-manager'
     | '/settings'
     | '/combos/$slug'
     | '/combos/'
@@ -267,6 +287,7 @@ export interface FileRouteTypes {
     | '/catalogue'
     | '/enquiry'
     | '/track'
+    | '/audit-logs'
     | '/categories'
     | '/coupons'
     | '/dashboard'
@@ -278,6 +299,7 @@ export interface FileRouteTypes {
     | '/payments'
     | '/products'
     | '/reports'
+    | '/seo-manager'
     | '/settings'
     | '/combos/$slug'
     | '/combos'
@@ -293,6 +315,7 @@ export interface FileRouteTypes {
     | '/combos'
     | '/enquiry'
     | '/track'
+    | '/_authenticated/audit-logs'
     | '/_authenticated/categories'
     | '/_authenticated/coupons'
     | '/_authenticated/dashboard'
@@ -304,6 +327,7 @@ export interface FileRouteTypes {
     | '/_authenticated/payments'
     | '/_authenticated/products'
     | '/_authenticated/reports'
+    | '/_authenticated/seo-manager'
     | '/_authenticated/settings'
     | '/combos/$slug'
     | '/combos/'
@@ -379,6 +403,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/track'
       preLoaderRoute: typeof TrackRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/audit-logs': {
+      id: '/_authenticated/audit-logs'
+      path: '/audit-logs'
+      fullPath: '/audit-logs'
+      preLoaderRoute: typeof AuthenticatedAuditLogsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/categories': {
       id: '/_authenticated/categories'
@@ -457,6 +488,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReportsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/seo-manager': {
+      id: '/_authenticated/seo-manager'
+      path: '/seo-manager'
+      fullPath: '/seo-manager'
+      preLoaderRoute: typeof AuthenticatedSeoManagerRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
       path: '/settings'
@@ -496,6 +534,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAuditLogsRoute: typeof AuthenticatedAuditLogsRoute
   AuthenticatedCategoriesRoute: typeof AuthenticatedCategoriesRoute
   AuthenticatedCouponsRoute: typeof AuthenticatedCouponsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
@@ -507,12 +546,14 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPaymentsRoute: typeof AuthenticatedPaymentsRoute
   AuthenticatedProductsRoute: typeof AuthenticatedProductsRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
+  AuthenticatedSeoManagerRoute: typeof AuthenticatedSeoManagerRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedEnquiriesIdRoute: typeof AuthenticatedEnquiriesIdRoute
   AuthenticatedEnquiriesIndexRoute: typeof AuthenticatedEnquiriesIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAuditLogsRoute: AuthenticatedAuditLogsRoute,
   AuthenticatedCategoriesRoute: AuthenticatedCategoriesRoute,
   AuthenticatedCouponsRoute: AuthenticatedCouponsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
@@ -524,6 +565,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPaymentsRoute: AuthenticatedPaymentsRoute,
   AuthenticatedProductsRoute: AuthenticatedProductsRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
+  AuthenticatedSeoManagerRoute: AuthenticatedSeoManagerRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedEnquiriesIdRoute: AuthenticatedEnquiriesIdRoute,
   AuthenticatedEnquiriesIndexRoute: AuthenticatedEnquiriesIndexRoute,

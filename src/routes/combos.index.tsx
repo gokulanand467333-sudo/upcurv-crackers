@@ -61,7 +61,7 @@ function Combos() {
                     key={combo.id}
                     to="/combos/$slug"
                     params={{ slug: combo.slug }}
-                    className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-shadow hover:shadow-[0_8px_30px_-12px_rgba(0,0,0,0.15)]"
+                    className="group flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-border bg-card transition-shadow hover:shadow-[0_8px_30px_-12px_rgba(0,0,0,0.15)]"
                   >
                     <img
                       src={combo.image_url || categoryImage("gift-boxes")}
@@ -72,7 +72,7 @@ function Combos() {
                       className="h-36 w-full object-cover"
                     />
                     <div className="flex flex-1 flex-col p-4">
-                      <h2 className="text-lg font-semibold">
+                      <h2 className="cursor-pointer text-lg font-semibold group-hover:text-primary">
                         🎇 {pick(lang, combo.title, combo.title_ta)}
                       </h2>
                       <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
@@ -91,7 +91,7 @@ function Combos() {
                           You save {inr(saved)}
                         </p>
                       )}
-                      <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary">
+                      <span className="mt-4 inline-flex cursor-pointer items-center gap-1 text-sm font-semibold text-primary group-hover:underline">
                         Tap to view {lines.length} items <ChevronRight className="size-4" />
                       </span>
                     </div>

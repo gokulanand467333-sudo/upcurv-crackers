@@ -119,6 +119,44 @@ function Guide() {
         ))}
       </div>
 
+      <section className="mt-5 rounded-xl border border-border bg-card p-5 shadow-sm">
+        <h2 className="text-sm font-semibold">Where the shop details live in the code</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Shop name, phone numbers, address, logo and legal lines are fixed in the code (not in
+          Settings) so they can never be changed by mistake. Ask your developer to edit these files:
+        </p>
+        <ul className="mt-3 space-y-2 text-xs text-muted-foreground">
+          <li>
+            <span className="font-mono text-foreground">src/lib/shop.ts</span> — shop name, tagline,
+            WhatsApp and call numbers, email, full address, licence line, safety notice, UPI details.
+          </li>
+          <li>
+            <span className="font-mono text-foreground">src/assets/</span> — logo, hero picture and
+            category icons.
+          </li>
+          <li>
+            <span className="font-mono text-foreground">public/favicon.ico</span> and{" "}
+            <span className="font-mono text-foreground">public/robots.txt</span> — browser tab icon
+            and search engine rules.
+          </li>
+          <li>
+            <span className="font-mono text-foreground">src/styles.css</span> — brand colours.
+          </li>
+          <li>
+            <span className="font-mono text-foreground">db/setup.sql</span> — one file that builds a
+            complete, empty database for a brand-new store. Run it once in a fresh Supabase project
+            and the whole platform works.
+          </li>
+        </ul>
+        <p className="mt-3 text-xs text-muted-foreground">
+          Page title, description, keywords, favicon link and share image can be changed by you at{" "}
+          <span className="font-mono text-foreground">/seo-manager</span> — it has no menu link and
+          only a signed-in seller can open it.
+        </p>
+      </section>
+
+
+
       <p className="mt-6 text-sm text-muted-foreground">
         Start from the{" "}
         <Link to="/dashboard" className="font-semibold text-report-blue">

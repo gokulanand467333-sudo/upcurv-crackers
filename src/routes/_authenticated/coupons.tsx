@@ -56,6 +56,30 @@ function CouponsPage() {
     },
   });
 
+  // Usage is derived from the enquiries that actually carried each code,
+  // so the count stays correct even if the stored counter was never bumped.
+  const usageQuery = useQuery({
+    queryKey: ["admin", "coupon-usage"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("enquiries")
+        .select("coupon_code, discount_amount")
+        .not("coupon_code", "is", null);
+      if (error) throw error;
+      const map: Record<string, { count: number; amount: number }> = {};
+      for (const row of data) {
+        const code = (row.coupon_code ?? "").toUpperCase();
+        if (!code) continue;
+        const entry = map[code] ?? { count: 0, amount: 0 };
+        entry.count += 1;
+        entry.amount += Number(row.discount_amount ?? 0);
+        map[code] = entry;
+      }
+      return map;
+    },
+  });
+  const usage = usageQuery.data ?? {};
+
   const save = useMutation({
     mutationFn: async (d: Draft) => {
       const payload: TablesInsert<"coupons"> = {
@@ -105,36 +129,74 @@ function CouponsPage() {
         </Button>
       </div>
 
-      <div className="mt-5 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {isLoading &&
-          Array.from({ length: 4 }).map((_, i) => <div key={i} className="shimmer h-16 w-full" />)}
-        {(data ?? []).map((c) => (
-          <div key={c.id} className="flex items-center gap-3 p-3">
-            <button className="min-w-0 flex-1 text-left" onClick={() => setDraft(c)}>
-              <p className="truncate text-sm font-semibold">
-                {c.code}{" "}
-                <span className="ml-1 text-xs font-normal text-muted-foreground">
-                  {c.discount_type === "flat" ? inr(Number(c.value)) : `${Number(c.value)}%`} off
-                </span>
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {c.label ?? "—"} · min {inr(Number(c.min_value))} · used {c.used_count}
-                {c.active ? "" : " · inactive"}
-              </p>
-            </button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                if (confirm(`Delete ${c.code}?`)) remove.mutate(c.id);
-              }}
+          Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="shimmer h-40 w-full rounded-2xl" />
+          ))}
+        {(data ?? []).map((c) => {
+          const stat = usage[c.code.toUpperCase()] ?? { count: 0, amount: 0 };
+          return (
+            <article
+              key={c.id}
+              className="rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:shadow-md"
             >
-              <Trash2 className="size-4" />
-            </Button>
-          </div>
-        ))}
+              <div className="flex items-center gap-2">
+                <p className="truncate font-mono text-base font-bold tracking-wide">{c.code}</p>
+                <span
+                  className={`ml-auto rounded-full border px-2 py-0.5 text-[11px] font-semibold ${
+                    c.active
+                      ? "border-report-green/25 bg-report-green/10 text-report-green"
+                      : "border-border bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {c.active ? "Active" : "Inactive"}
+                </span>
+              </div>
+              <p className="mt-1 text-sm font-semibold text-report-blue">
+                {c.discount_type === "flat" ? inr(Number(c.value)) : `${Number(c.value)}%`} off
+                {c.max_discount ? ` · up to ${inr(Number(c.max_discount))}` : ""}
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {c.label ?? "No description"} · min bill {inr(Number(c.min_value))}
+              </p>
+
+              {/* Real usage, counted from enquiries that carried this code. */}
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <div className="rounded-xl bg-report-violet/10 p-2.5">
+                  <p className="text-[11px] font-medium text-report-violet">Times used</p>
+                  <p className="text-lg font-bold tabular-nums text-report-violet">{stat.count}</p>
+                </div>
+                <div className="rounded-xl bg-report-teal/10 p-2.5">
+                  <p className="text-[11px] font-medium text-report-teal">Discount given</p>
+                  <p className="text-lg font-bold tabular-nums text-report-teal">
+                    {inr(stat.amount)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-3 flex gap-2">
+                <Button size="sm" variant="outline" className="flex-1" onClick={() => setDraft(c)}>
+                  Edit
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  aria-label={`Delete ${c.code}`}
+                  onClick={() => {
+                    if (confirm(`Delete ${c.code}?`)) remove.mutate(c.id);
+                  }}
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              </div>
+            </article>
+          );
+        })}
         {!isLoading && (data ?? []).length === 0 && (
-          <p className="p-8 text-center text-sm text-muted-foreground">No coupons yet.</p>
+          <p className="col-span-full p-8 text-center text-sm text-muted-foreground">
+            No coupons yet.
+          </p>
         )}
       </div>
 

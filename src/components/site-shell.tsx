@@ -19,7 +19,8 @@ function BoxNudge() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [show, setShow] = useState(false);
   const [dismissed, setDismissed] = useState(false);
-  const onBuilder = pathname.startsWith("/build-box");
+  // Never interrupt the builder itself or the enquiry (cart) page.
+  const onBuilder = pathname.startsWith("/build-box") || pathname.startsWith("/enquiry");
 
   useEffect(() => {
     if (onBuilder || dismissed) return;

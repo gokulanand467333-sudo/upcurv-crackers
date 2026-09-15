@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
+import { SeoHead } from "@/components/seo-head";
 import { Toaster } from "@/components/ui/sonner";
 import { EnquiryCartProvider } from "@/lib/enquiry-cart";
 import { LanguageProvider } from "@/lib/i18n";
@@ -136,6 +137,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <SeoHead />
       <LanguageProvider>
         <EnquiryCartProvider>
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
