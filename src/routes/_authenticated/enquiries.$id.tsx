@@ -251,6 +251,43 @@ function EnquiryDetail() {
               </div>
             </div>
 
+            {/* Money summary, always visible at the top of the enquiry. */}
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-xl border border-border bg-report-blue/5 p-3">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  {e.final_amount != null ? "Final amount" : "Total amount"}
+                </p>
+                <p className="mt-1 text-2xl font-semibold tabular-nums text-report-blue">
+                  {inr(billAmount)}
+                </p>
+                {e.final_amount != null && (
+                  <p className="text-[11px] text-muted-foreground">
+                    Quoted {inr(quotedValue)} · {items.length} items
+                  </p>
+                )}
+              </div>
+              <div className="rounded-xl border border-border bg-report-green/5 p-3">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  Collected
+                </p>
+                <p className="mt-1 text-2xl font-semibold tabular-nums text-report-green">
+                  {inr(collected)}
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  {(payments.data ?? []).length} payment(s)
+                </p>
+              </div>
+              <div className="rounded-xl border border-border bg-report-rose/5 p-3">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  Balance due
+                </p>
+                <p className="mt-1 text-2xl font-semibold tabular-nums text-report-rose">
+                  {inr(balance)}
+                </p>
+              </div>
+            </div>
+
+
             <div className="mt-4 flex flex-wrap gap-2">
               <Button asChild size="lg">
                 <a href={`tel:${e.mobile}`}>
