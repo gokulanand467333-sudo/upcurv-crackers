@@ -48,6 +48,7 @@ function NewEnquiry() {
   const [form, setForm] = useState({
     name: "",
     mobile: "",
+    state: "",
     city: "",
     address: "",
     pincode: "",
@@ -161,20 +162,54 @@ function NewEnquiry() {
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
               />
             </div>
+            <div className="space-y-1.5">
+              <Label>Mobile*</Label>
+              <Input
+                value={form.mobile}
+                onChange={(e) => setForm({ ...form, mobile: e.target.value })}
+              />
+            </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label>Mobile*</Label>
-                <Input
-                  value={form.mobile}
-                  onChange={(e) => setForm({ ...form, mobile: e.target.value })}
-                />
+                <Label>State*</Label>
+                <Select
+                  value={form.state}
+                  onValueChange={(v) => setForm({ ...form, state: v, city: "" })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select state" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    {STATES.map((s) => (
+                      <SelectItem
+                        key={s}
+                        value={s}
+                        className={cn(s === TAMIL_NADU && "font-semibold text-primary")}
+                      >
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1.5">
                 <Label>City*</Label>
-                <Input
+                <Select
                   value={form.city}
-                  onChange={(e) => setForm({ ...form, city: e.target.value })}
-                />
+                  onValueChange={(v) => setForm({ ...form, city: v })}
+                  disabled={!form.state}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={form.state ? "Select city" : "Select state first"} />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    {citiesFor(form.state).map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <div className="space-y-1.5">
