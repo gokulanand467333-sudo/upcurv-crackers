@@ -190,6 +190,9 @@ function EnquiryDetail() {
   const e = enquiry.data;
   const items = e.enquiry_items.filter((i) => !i.removed);
   const quotedValue = items.reduce((s, i) => s + i.qty * Number(i.unit_price), 0);
+  const billAmount = e.final_amount != null ? Number(e.final_amount) : quotedValue;
+  const collected = (payments.data ?? []).reduce((s, p) => s + Number(p.amount), 0);
+  const balance = Math.max(0, billAmount - collected);
   const quote = `Quotation for enquiry ${e.ref}\n${items
     .map((i) => `${i.product_name} x${i.qty} — ${inr(i.qty * Number(i.unit_price))}`)
     .join("\n")}\nTotal (indicative): ${inr(quotedValue)}\nSubject to final confirmation.`;
