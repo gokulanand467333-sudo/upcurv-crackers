@@ -24,6 +24,11 @@ export const Route = createFileRoute("/_authenticated/enquiries/")({
   component: Pipeline,
 });
 
+/** Card amount follows the finalized bill when there is one. */
+function billOf(r: Enquiry) {
+  return r.final_amount != null ? Number(r.final_amount) : Number(r.estimated_value);
+}
+
 function StatusBadge({ status }: { status: Enquiry["status"] }) {
   return (
     <span
@@ -187,7 +192,7 @@ function Pipeline() {
                     <StatusBadge status={r.status} />
                   </div>
                   <div className="mt-3 flex items-baseline justify-between">
-                    <span className="text-lg font-semibold">{inr(Number(r.estimated_value))}</span>
+                    <span className="text-lg font-semibold">{inr(billOf(r))}</span>
                     <span className="text-[11px] text-muted-foreground">{r.item_count} items</span>
                   </div>
                   <p className="mt-1 text-[11px] text-muted-foreground">
@@ -241,7 +246,7 @@ function Pipeline() {
                           {r.ref} · {r.city}
                         </p>
                         <p className="mt-1 text-xs">
-                          {r.item_count} items · {inr(Number(r.estimated_value))}
+                          {r.item_count} items · {inr(billOf(r))}
                         </p>
                       </Link>
                       <ContactButtons r={r} />
