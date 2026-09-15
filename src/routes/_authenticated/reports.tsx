@@ -218,42 +218,36 @@ function ReportsPage() {
     (r) => r.product_name ?? "Unknown",
     (r) => Math.max(1, r.qty),
   )
-    .slice(0, 8)
+    .slice(0, 5)
     .map(([name, value]) => ({ name, value }));
 
-  // Add-on strip vs Deal Store contribution to enquiries.
-  const addonIds = new Set(
-    (placement.data ?? []).filter((p) => p.addon_rank != null).map((p) => p.id),
-  );
-  const dealIds = new Set(
-    (placement.data ?? []).filter((p) => p.deal_rank != null).map((p) => p.id),
-  );
-  const strip = (ids: Set<string>) => {
-    const lines = soldLines.filter((r) => r.product_id && ids.has(r.product_id));
-    return {
-      qty: lines.reduce((s, r) => s + r.qty, 0),
-      value: lines.reduce((s, r) => s + r.qty * Number(r.unit_price ?? 0), 0),
-      lines: lines.length,
-    };
-  };
-  const addonStats = strip(addonIds);
-  const dealStats = strip(dealIds);
+  // Strip performance counts ONLY taps on the enquiry-page strips (website
+  // customers), never manual seller entries or catalogue / box / home adds.
+  const dealTaps = ev.filter((e) => e.kind === "deal_add");
+  const addonTaps = ev.filter((e) => e.kind === "addon_add");
+  const strip = (list: typeof ev) => ({
+    qty: list.reduce((s, r) => s + Math.max(1, r.qty), 0),
+    value: list.reduce((s, r) => s + Number(r.value ?? 0), 0),
+    lines: list.length,
+  });
+  const addonStats = strip(addonTaps);
+  const dealStats = strip(dealTaps);
   const totalLineValue = soldLines.reduce((s, r) => s + r.qty * Number(r.unit_price ?? 0), 0);
 
   const topDealProducts = group(
-    soldLines.filter((r) => r.product_id && dealIds.has(r.product_id)),
+    dealTaps,
     (r) => r.product_name ?? "Unknown",
-    (r) => r.qty * Number(r.unit_price ?? 0),
+    (r) => Number(r.value ?? 0),
   )
-    .slice(0, 6)
+    .slice(0, 5)
     .map(([name, value]) => ({ name, value }));
 
   const topAddonProducts = group(
-    soldLines.filter((r) => r.product_id && addonIds.has(r.product_id)),
+    addonTaps,
     (r) => r.product_name ?? "Unknown",
-    (r) => r.qty * Number(r.unit_price ?? 0),
+    (r) => Number(r.value ?? 0),
   )
-    .slice(0, 6)
+    .slice(0, 5)
     .map(([name, value]) => ({ name, value }));
 
   const bySource = group(
