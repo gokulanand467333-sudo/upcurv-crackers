@@ -26,7 +26,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import type { Enums, TablesInsert } from "@/integrations/supabase/types";
-import { BOX_TAGS, categoriesQuery, type Product } from "@/lib/catalog";
+import { BOX_TAGS, PROMO_TAGS, categoriesQuery, type Product } from "@/lib/catalog";
 import { inr } from "@/lib/shop";
 
 export const Route = createFileRoute("/_authenticated/products")({
@@ -114,6 +114,13 @@ type ImportRow = {
   availability: Enums<"availability_status">;
 };
 
+const AVAILABILITY_TONE: Record<string, string> = {
+  available: "border-report-green/25 bg-report-green/10 text-report-green",
+  limited: "border-amber-300 bg-amber-100 text-amber-700",
+  unavailable: "border-report-rose/25 bg-report-rose/10 text-report-rose",
+  enquiry_only: "border-report-blue/25 bg-report-blue/10 text-report-blue",
+};
+
 const AVAIL_SET = new Set(AVAILABILITY as string[]);
 
 function pick(row: Record<string, unknown>, keys: string[]) {
@@ -134,6 +141,32 @@ function ProductsAdmin() {
   const [importRows, setImportRows] = useState<ImportRow[] | null>(null);
   const [importErrors, setImportErrors] = useState<string[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
+  const imageRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  /** Stores the photo in the product-images bucket and keeps a long-lived link. */
+  const uploadImage = async (file: File) => {
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `products/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const up = await supabase.storage.from("product-images").upload(path, file, {
+        cacheControl: "31536000",
+        upsert: false,
+      });
+      if (up.error) throw up.error;
+      const signed = await supabase.storage
+        .from("product-images")
+        .createSignedUrl(path, 60 * 60 * 24 * 365 * 5);
+      if (signed.error) throw signed.error;
+      setDraft((d) => (d ? { ...d, image_url: signed.data.signedUrl } : d));
+      toast.success("Photo uploaded");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const categories = useQuery(categoriesQuery);
   const products = useQuery({
@@ -152,6 +185,10 @@ function ProductsAdmin() {
 
   const save = useMutation({
     mutationFn: async (d: Draft) => {
+      // A deal price only makes sense when it is cheaper than the normal price.
+      if (d.deal_price !== "" && Number(d.deal_price) >= Number(d.price || 0)) {
+        throw new Error("Deal price must be less than the selling price.");
+      }
       const payload: TablesInsert<"products"> = {
         code: d.code.trim().toUpperCase(),
         name: d.name.trim(),
@@ -434,7 +471,11 @@ function ProductsAdmin() {
                   </p>
                 </div>
                 <span className="w-20 text-right text-sm font-semibold">{inr(p.price)}</span>
-                <span className="hidden w-28 text-xs text-muted-foreground sm:block">
+                <span
+                  className={`hidden rounded-full border px-2 py-0.5 text-[11px] font-semibold capitalize sm:block ${
+                    AVAILABILITY_TONE[p.availability]
+                  }`}
+                >
                   {p.availability.replace("_", " ")}
                 </span>
                 <Switch
@@ -554,12 +595,56 @@ function ProductsAdmin() {
                 </Select>
               </div>
               <div className="space-y-1.5 sm:col-span-2">
-                <Label>Image URL</Label>
-                <Input
-                  value={draft.image_url}
-                  placeholder="https://…"
-                  onChange={(e) => setDraft({ ...draft, image_url: e.target.value })}
-                />
+                <Label>Product photo</Label>
+                <div className="flex items-center gap-3">
+                  {draft.image_url && (
+                    <img
+                      src={draft.image_url}
+                      alt=""
+                      className="h-14 w-20 shrink-0 rounded-md border border-border object-cover"
+                    />
+                  )}
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <Input
+                      value={draft.image_url}
+                      placeholder="Paste an image link, or upload below"
+                      onChange={(e) => setDraft({ ...draft, image_url: e.target.value })}
+                    />
+                    <div className="flex items-center gap-2">
+                      <input
+                        ref={imageRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) void uploadImage(file);
+                          e.target.value = "";
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={uploading}
+                        onClick={() => imageRef.current?.click()}
+                      >
+                        <Upload className="size-4" />
+                        {uploading ? "Uploading…" : "Upload from device"}
+                      </Button>
+                      {draft.image_url && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setDraft({ ...draft, image_url: "" })}
+                        >
+                          Remove
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
               <div className="rounded-xl border border-border p-3 sm:col-span-2">
                 <p className="text-sm font-semibold">Enquiry page placement</p>
@@ -597,6 +682,17 @@ function ProductsAdmin() {
                       value={draft.deal_price}
                       onChange={(e) => setDraft({ ...draft, deal_price: e.target.value })}
                     />
+                    <p
+                      className={`text-[11px] ${
+                        draft.deal_price !== "" &&
+                        Number(draft.deal_price) >= Number(draft.price || 0)
+                          ? "font-medium text-report-rose"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      Must be lower than the selling price
+                      {draft.price ? ` (${inr(Number(draft.price))})` : ""}.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -623,6 +719,38 @@ function ProductsAdmin() {
                         }`}
                       >
                         {tg.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label>Promotion badges</Label>
+                <p className="text-[11px] text-muted-foreground">
+                  Shown on the product card to attract customers.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {PROMO_TAGS.map((tg) => {
+                    const on = draft.tags.includes(tg.key);
+                    return (
+                      <button
+                        key={tg.key}
+                        type="button"
+                        onClick={() =>
+                          setDraft({
+                            ...draft,
+                            tags: on
+                              ? draft.tags.filter((t) => t !== tg.key)
+                              : [...draft.tags, tg.key],
+                          })
+                        }
+                        className={`cursor-pointer rounded-full border px-3 py-1 text-xs ${
+                          on
+                            ? "border-report-violet bg-report-violet text-white"
+                            : "border-border"
+                        }`}
+                      >
+                        {tg.emoji} {tg.label}
                       </button>
                     );
                   })}

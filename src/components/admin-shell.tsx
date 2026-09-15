@@ -1,9 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   BarChart3,
   BellRing,
   BookOpen,
+  History,
   Gift,
   LayoutDashboard,
   ListChecks,
@@ -60,11 +61,10 @@ const CATALOGUE_LINKS = [
 ] as const;
 
 const SETTINGS_LINKS = [
+  { to: "/audit-logs", label: "Activity log", icon: History },
   { to: "/guide", label: "Guide", icon: BookOpen },
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
-
-const NOTES_KEY = "upcurv-sticky-notes";
 
 /** Count of enquiries the seller has not opened yet; chimes when a new one arrives. */
 export function useUnseenEnquiries() {
@@ -149,36 +149,111 @@ function Clock() {
   );
 }
 
+const NOTE_COLORS: Record<string, string> = {
+  yellow: "bg-amber-100 border-amber-300",
+  blue: "bg-sky-100 border-sky-300",
+  green: "bg-emerald-100 border-emerald-300",
+  pink: "bg-rose-100 border-rose-300",
+  violet: "bg-violet-100 border-violet-300",
+};
+
+/** Multiple colour-coded reminders, shared across devices via the database. */
 function StickyNotes() {
-  const [text, setText] = useState("");
-  const [loaded, setLoaded] = useState(false);
-  useEffect(() => {
-    setText(localStorage.getItem(NOTES_KEY) ?? "");
-    setLoaded(true);
-  }, []);
+  const qc = useQueryClient();
+  const notes = useQuery({
+    queryKey: ["admin", "sticky-notes"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("sticky_notes")
+        .select("*")
+        .order("pinned", { ascending: false })
+        .order("updated_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+  const rows = notes.data ?? [];
+  const refresh = () => qc.invalidateQueries({ queryKey: ["admin", "sticky-notes"] });
+
+  const addNote = async (color: string) => {
+    await supabase.from("sticky_notes").insert({ body: "", color });
+    refresh();
+  };
+  const saveNote = async (id: string, patch: { body?: string; color?: string }) => {
+    await supabase.from("sticky_notes").update(patch).eq("id", id);
+    refresh();
+  };
+  const removeNote = async (id: string) => {
+    await supabase.from("sticky_notes").delete().eq("id", id);
+    refresh();
+  };
+
   return (
     <Popover>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="relative size-8" aria-label="Sticky notes">
           <StickyNote className="size-4" />
-          {loaded && text.trim() !== "" && (
+          {rows.length > 0 && (
             <span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-report-rose" />
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80">
-        <p className="text-sm font-semibold">Sticky notes</p>
-        <p className="text-[11px] text-muted-foreground">Quick reminders saved on this device.</p>
-        <Textarea
-          value={text}
-          rows={7}
-          placeholder="Call Ramesh at 6pm…"
-          className="mt-2 resize-none"
-          onChange={(e) => {
-            setText(e.target.value);
-            localStorage.setItem(NOTES_KEY, e.target.value);
-          }}
-        />
+      <PopoverContent align="end" className="max-h-[70vh] w-96 overflow-y-auto">
+        <div className="flex items-center gap-2">
+          <div>
+            <p className="text-sm font-semibold">Sticky notes</p>
+            <p className="text-[11px] text-muted-foreground">
+              {rows.length} note{rows.length === 1 ? "" : "s"}
+            </p>
+          </div>
+          <div className="ml-auto flex items-center gap-1">
+            {Object.keys(NOTE_COLORS).map((c) => (
+              <button
+                key={c}
+                aria-label={`Add ${c} note`}
+                onClick={() => void addNote(c)}
+                className={`size-5 cursor-pointer rounded-full border ${NOTE_COLORS[c]}`}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-3 space-y-2">
+          {rows.length === 0 && (
+            <p className="rounded-lg border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
+              Tap a colour above to add your first note.
+            </p>
+          )}
+          {rows.map((n) => (
+            <div key={n.id} className={`rounded-lg border p-2 ${NOTE_COLORS[n.color] ?? NOTE_COLORS["yellow"]}`}>
+              <Textarea
+                defaultValue={n.body}
+                rows={3}
+                placeholder="Call Ramesh at 6pm…"
+                className="resize-none border-0 bg-transparent p-1 text-sm text-neutral-800 shadow-none focus-visible:ring-0"
+                onBlur={(e) => {
+                  if (e.target.value !== n.body) void saveNote(n.id, { body: e.target.value });
+                }}
+              />
+              <div className="flex items-center gap-1">
+                {Object.keys(NOTE_COLORS).map((c) => (
+                  <button
+                    key={c}
+                    aria-label={`Colour ${c}`}
+                    onClick={() => void saveNote(n.id, { color: c })}
+                    className={`size-3.5 cursor-pointer rounded-full border ${NOTE_COLORS[c]}`}
+                  />
+                ))}
+                <button
+                  onClick={() => void removeNote(n.id)}
+                  className="ml-auto cursor-pointer text-[11px] font-medium text-neutral-600 hover:text-rose-600"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       </PopoverContent>
     </Popover>
   );

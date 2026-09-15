@@ -17,6 +17,7 @@ import { Route as CatalogueRouteImport } from './routes/catalogue'
 import { Route as CombosRouteImport } from './routes/combos'
 import { Route as EnquiryRouteImport } from './routes/enquiry'
 import { Route as TrackRouteImport } from './routes/track'
+import { Route as AuthenticatedAuditLogsRouteImport } from './routes/_authenticated/audit-logs'
 import { Route as AuthenticatedCategoriesRouteImport } from './routes/_authenticated/categories'
 import { Route as AuthenticatedCouponsRouteImport } from './routes/_authenticated/coupons'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -72,6 +73,11 @@ const TrackRoute = TrackRouteImport.update({
   id: '/track',
   path: '/track',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAuditLogsRoute = AuthenticatedAuditLogsRouteImport.update({
+  id: '/audit-logs',
+  path: '/audit-logs',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedCategoriesRoute = AuthenticatedCategoriesRouteImport.update({
   id: '/categories',
@@ -165,6 +171,7 @@ export interface FileRoutesByFullPath {
   '/combos': typeof CombosRouteWithChildren
   '/enquiry': typeof EnquiryRoute
   '/track': typeof TrackRoute
+  '/audit-logs': typeof AuthenticatedAuditLogsRoute
   '/categories': typeof AuthenticatedCategoriesRoute
   '/coupons': typeof AuthenticatedCouponsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -189,6 +196,7 @@ export interface FileRoutesByTo {
   '/catalogue': typeof CatalogueRoute
   '/enquiry': typeof EnquiryRoute
   '/track': typeof TrackRoute
+  '/audit-logs': typeof AuthenticatedAuditLogsRoute
   '/categories': typeof AuthenticatedCategoriesRoute
   '/coupons': typeof AuthenticatedCouponsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -216,6 +224,7 @@ export interface FileRoutesById {
   '/combos': typeof CombosRouteWithChildren
   '/enquiry': typeof EnquiryRoute
   '/track': typeof TrackRoute
+  '/_authenticated/audit-logs': typeof AuthenticatedAuditLogsRoute
   '/_authenticated/categories': typeof AuthenticatedCategoriesRoute
   '/_authenticated/coupons': typeof AuthenticatedCouponsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -243,6 +252,7 @@ export interface FileRouteTypes {
     | '/combos'
     | '/enquiry'
     | '/track'
+    | '/audit-logs'
     | '/categories'
     | '/coupons'
     | '/dashboard'
@@ -267,6 +277,7 @@ export interface FileRouteTypes {
     | '/catalogue'
     | '/enquiry'
     | '/track'
+    | '/audit-logs'
     | '/categories'
     | '/coupons'
     | '/dashboard'
@@ -293,6 +304,7 @@ export interface FileRouteTypes {
     | '/combos'
     | '/enquiry'
     | '/track'
+    | '/_authenticated/audit-logs'
     | '/_authenticated/categories'
     | '/_authenticated/coupons'
     | '/_authenticated/dashboard'
@@ -379,6 +391,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/track'
       preLoaderRoute: typeof TrackRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/audit-logs': {
+      id: '/_authenticated/audit-logs'
+      path: '/audit-logs'
+      fullPath: '/audit-logs'
+      preLoaderRoute: typeof AuthenticatedAuditLogsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/categories': {
       id: '/_authenticated/categories'
@@ -496,6 +515,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAuditLogsRoute: typeof AuthenticatedAuditLogsRoute
   AuthenticatedCategoriesRoute: typeof AuthenticatedCategoriesRoute
   AuthenticatedCouponsRoute: typeof AuthenticatedCouponsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
@@ -513,6 +533,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAuditLogsRoute: AuthenticatedAuditLogsRoute,
   AuthenticatedCategoriesRoute: AuthenticatedCategoriesRoute,
   AuthenticatedCouponsRoute: AuthenticatedCouponsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,

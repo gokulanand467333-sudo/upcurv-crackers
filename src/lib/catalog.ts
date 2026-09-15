@@ -49,6 +49,19 @@ export const BOX_TAGS = [
   { key: "traditional", label: "Traditional" },
 ];
 
+/** Short marketing badges shown on product cards to nudge the customer. */
+export const PROMO_TAGS = [
+  { key: "bestseller", label: "Bestseller", emoji: "\u2b50" },
+  { key: "new", label: "New arrival", emoji: "\u2728" },
+  { key: "kids_safe", label: "Kids safe", emoji: "\ud83e\uddd2" },
+  { key: "value", label: "Best value", emoji: "\ud83d\udcb0" },
+  { key: "trending", label: "Trending now", emoji: "\ud83d\udd25" },
+] as const;
+
+export const PROMO_TAG_LABEL: Record<string, string> = Object.fromEntries(
+  PROMO_TAGS.map((t) => [t.key, `${t.emoji} ${t.label}`]),
+);
+
 export const categoriesQuery = queryOptions({
   queryKey: ["categories"],
   queryFn: async () => {

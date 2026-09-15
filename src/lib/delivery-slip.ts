@@ -14,6 +14,11 @@ type SlipOptions = {
     pincode?: string | null;
   };
   lines: SlipLine[];
+  /** Goods value before coupon and delivery charge. */
+  subtotal?: number;
+  couponCode?: string | null;
+  discount?: number;
+  deliveryCharge?: number;
   total: number;
   fileName: string;
 };
@@ -21,7 +26,17 @@ type SlipOptions = {
 const money = (n: number) => "Rs. " + Number(n || 0).toLocaleString("en-IN");
 
 /** Rectangle-framed delivery slip: shop branding, customer block, item/qty table, total, signature. */
-export function downloadDeliverySlip({ ref, customer, lines, total, fileName }: SlipOptions) {
+export function downloadDeliverySlip({
+  ref,
+  customer,
+  lines,
+  subtotal,
+  couponCode,
+  discount = 0,
+  deliveryCharge = 0,
+  total,
+  fileName,
+}: SlipOptions) {
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const L = 40;
   const R = 555;
@@ -95,6 +110,27 @@ export function downloadDeliverySlip({ ref, customer, lines, total, fileName }: 
   doc.text("Crackers", L + 14, y + 15);
   doc.text(String(totalQty), R - 14, y + 15, { align: "right" });
   y += rowH;
+
+  // Bill breakdown — goods value, coupon discount, delivery charge, payable total.
+  const breakdown: { label: string; value: number }[] = [];
+  if (subtotal !== undefined) breakdown.push({ label: "Goods value", value: subtotal });
+  if (discount > 0)
+    breakdown.push({
+      label: `Coupon discount${couponCode ? ` (${couponCode})` : ""}`,
+      value: -discount,
+    });
+  if (deliveryCharge > 0) breakdown.push({ label: "Delivery charge", value: deliveryCharge });
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  for (const row of breakdown) {
+    frame(y, 20);
+    doc.text(row.label, L + 14, y + 14);
+    doc.text((row.value < 0 ? "- " : "") + money(Math.abs(row.value)), R - 14, y + 14, {
+      align: "right",
+    });
+    y += 20;
+  }
 
   // Total
   frame(y, 26);

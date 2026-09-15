@@ -276,7 +276,7 @@ function Dashboard() {
                     <Skeleton className="h-3 w-1/2" />
                   </div>
                 ))
-              : rows.slice(0, 8).map((r) => (
+              : rows.slice(0, 5).map((r) => (
                   <Link
                     key={r.id}
                     to="/enquiries/$id"
