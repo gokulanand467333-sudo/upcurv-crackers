@@ -35,6 +35,48 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_logs: {
+        Row: {
+          action: string
+          actor: string | null
+          created_at: string
+          detail: string | null
+          entity: string
+          entity_id: string | null
+          entity_label: string | null
+          field: string | null
+          id: string
+          new_value: string | null
+          old_value: string | null
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          created_at?: string
+          detail?: string | null
+          entity: string
+          entity_id?: string | null
+          entity_label?: string | null
+          field?: string | null
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          created_at?: string
+          detail?: string | null
+          entity?: string
+          entity_id?: string | null
+          entity_label?: string | null
+          field?: string | null
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           created_at: string
@@ -195,6 +237,7 @@ export type Database = {
           contact_method: string | null
           coupon_code: string | null
           created_at: string
+          delivery_charge: number
           discount_amount: number
           estimated_value: number
           final_amount: number | null
@@ -220,6 +263,7 @@ export type Database = {
           contact_method?: string | null
           coupon_code?: string | null
           created_at?: string
+          delivery_charge?: number
           discount_amount?: number
           estimated_value?: number
           final_amount?: number | null
@@ -245,6 +289,7 @@ export type Database = {
           contact_method?: string | null
           coupon_code?: string | null
           created_at?: string
+          delivery_charge?: number
           discount_amount?: number
           estimated_value?: number
           final_amount?: number | null
@@ -488,6 +533,33 @@ export type Database = {
           session_id?: string
           source?: string
           value?: number
+        }
+        Relationships: []
+      }
+      sticky_notes: {
+        Row: {
+          body: string
+          color: string
+          created_at: string
+          id: string
+          pinned: boolean
+          updated_at: string
+        }
+        Insert: {
+          body?: string
+          color?: string
+          created_at?: string
+          id?: string
+          pinned?: boolean
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          color?: string
+          created_at?: string
+          id?: string
+          pinned?: boolean
+          updated_at?: string
         }
         Relationships: []
       }
