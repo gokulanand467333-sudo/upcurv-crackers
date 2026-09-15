@@ -68,6 +68,20 @@ function EnquiryDetail() {
     },
   });
 
+  const payments = useQuery({
+    queryKey: ["admin", "payments", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("payments")
+        .select("*")
+        .eq("enquiry_id", id)
+        .order("paid_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ["admin"] });
   };
