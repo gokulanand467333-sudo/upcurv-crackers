@@ -197,6 +197,7 @@ export type Database = {
           created_at: string
           discount_amount: number
           estimated_value: number
+          final_amount: number | null
           follow_up_at: string | null
           free_text: string | null
           fulfilment: string | null
@@ -221,6 +222,7 @@ export type Database = {
           created_at?: string
           discount_amount?: number
           estimated_value?: number
+          final_amount?: number | null
           follow_up_at?: string | null
           free_text?: string | null
           fulfilment?: string | null
@@ -245,6 +247,7 @@ export type Database = {
           created_at?: string
           discount_amount?: number
           estimated_value?: number
+          final_amount?: number | null
           follow_up_at?: string | null
           free_text?: string | null
           fulfilment?: string | null
@@ -333,6 +336,50 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "enquiry_notes_enquiry_id_fkey"
+            columns: ["enquiry_id"]
+            isOneToOne: false
+            referencedRelation: "enquiries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          enquiry_id: string
+          id: string
+          method: string
+          note: string | null
+          paid_at: string
+          reference: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          enquiry_id: string
+          id?: string
+          method?: string
+          note?: string | null
+          paid_at?: string
+          reference?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          enquiry_id?: string
+          id?: string
+          method?: string
+          note?: string | null
+          paid_at?: string
+          reference?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_enquiry_id_fkey"
             columns: ["enquiry_id"]
             isOneToOne: false
             referencedRelation: "enquiries"
