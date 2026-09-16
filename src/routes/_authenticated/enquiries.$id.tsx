@@ -460,7 +460,15 @@ function EnquiryDetail() {
                   className={`flex items-center gap-3 py-2 ${i.removed ? "opacity-40" : ""}`}
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{i.product_name}</p>
+                    <p className="flex items-center gap-1.5 truncate text-sm font-medium">
+                      {isDealLine(i) && (
+                        <Star
+                          className="size-3.5 shrink-0 fill-report-amber text-report-amber"
+                          aria-label="Deal Store price"
+                        />
+                      )}
+                      {i.product_name}
+                    </p>
                     <p className="text-xs text-muted-foreground">{i.product_code}</p>
                   </div>
                   {editing ? (
