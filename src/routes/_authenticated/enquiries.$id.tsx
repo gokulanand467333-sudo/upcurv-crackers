@@ -7,6 +7,7 @@ import {
   Pencil,
   Phone,
   Printer,
+  Star,
   Trash2,
   X,
 } from "lucide-react";
@@ -212,6 +213,12 @@ function EnquiryDetail() {
   const collected = (payments.data ?? []).reduce((s, p) => s + Number(p.amount), 0);
   const balance = Math.max(0, billAmount - collected);
   const paymentsDisabled = e.status === "not_converted";
+  // Lines bought at a Deal Store price get a star so the lower amount is not queried.
+  const dealMap = new Map((dealProducts.data ?? []).map((d) => [d.id, Number(d.deal_price ?? 0)]));
+  const isDealLine = (i: { product_id: string | null; unit_price: number | string }) =>
+    !!i.product_id &&
+    dealMap.has(i.product_id) &&
+    Number(dealMap.get(i.product_id)) === Number(i.unit_price);
   const quote = `Quotation for enquiry ${e.ref}\n${items
     .map((i) => `${i.product_name} x${i.qty} — ${inr(i.qty * Number(i.unit_price))}`)
     .join("\n")}\nTotal (indicative): ${inr(quotedValue)}\nSubject to final confirmation.`;
@@ -460,7 +467,15 @@ function EnquiryDetail() {
                   className={`flex items-center gap-3 py-2 ${i.removed ? "opacity-40" : ""}`}
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{i.product_name}</p>
+                    <p className="flex items-center gap-1.5 truncate text-sm font-medium">
+                      {isDealLine(i) && (
+                        <Star
+                          className="size-3.5 shrink-0 fill-report-amber text-report-amber"
+                          aria-label="Deal Store price"
+                        />
+                      )}
+                      {i.product_name}
+                    </p>
                     <p className="text-xs text-muted-foreground">{i.product_code}</p>
                   </div>
                   {editing ? (
@@ -540,7 +555,11 @@ function EnquiryDetail() {
                       const next = Number(ev.target.value || 0);
                       if (!Number.isFinite(next) || next < 0 || next === delivery) return;
                       update.mutate(
-                        { delivery_charge: next },
+                        {
+                          delivery_charge: next,
+                          // Keep the list/payment views in sync with the new bill value.
+                          estimated_value: Math.max(0, quotedValue - discount) + next,
+                        },
                         {
                           onSuccess: () =>
                             logEdit(`Delivery charge ${inr(delivery)} → ${inr(next)}`),
@@ -779,14 +798,6 @@ function EnquiryDetail() {
                       {p.reference ? ` · ${p.reference}` : ""}
                     </p>
                   </div>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => deletePayment.mutate(p.id)}
-                    aria-label="Remove payment"
-                  >
-                    <X className="size-4" />
-                  </Button>
                 </div>
               ))}
               {(payments.data ?? []).length === 0 && (

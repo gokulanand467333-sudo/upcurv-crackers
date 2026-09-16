@@ -18,6 +18,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { SOURCES } from "@/lib/admin";
+import { couponDiscount, type Coupon } from "@/lib/coupon-math";
 import { STATES, TAMIL_NADU, citiesFor } from "@/lib/india-locations";
 import { inr } from "@/lib/shop";
 import { cn } from "@/lib/utils";
@@ -59,6 +60,8 @@ function NewEnquiry() {
   });
   const [lines, setLines] = useState<Line[]>([]);
   const [q, setQ] = useState("");
+  const [couponInput, setCouponInput] = useState("");
+  const [coupon, setCoupon] = useState<Coupon | null>(null);
 
   const products = useQuery({
     queryKey: ["admin", "products"],
@@ -79,8 +82,37 @@ function NewEnquiry() {
       .slice(0, 8);
   }, [q, products.data]);
 
-  const total = lines.reduce((s, l) => s + l.qty * l.unit_price, 0);
+  const subtotal = lines.reduce((s, l) => s + l.qty * l.unit_price, 0);
   const itemCount = lines.reduce((s, l) => s + l.qty, 0);
+  const couponCheck = coupon ? couponDiscount(coupon, subtotal) : null;
+  const discount = couponCheck?.ok ? couponCheck.discount : 0;
+  const total = Math.max(0, subtotal - discount);
+
+  /** Look the code up in the coupons table and validate it against the current bill. */
+  const applyCoupon = async () => {
+    const code = couponInput.trim().toUpperCase();
+    if (!code) return;
+    const { data, error } = await supabase
+      .from("coupons")
+      .select("*")
+      .eq("code", code)
+      .maybeSingle();
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    if (!data) {
+      toast.error("No coupon found with that code.");
+      return;
+    }
+    const check = couponDiscount(data, subtotal);
+    if (!check.ok) {
+      toast.error(check.reason);
+      return;
+    }
+    setCoupon(data);
+    toast.success(`Coupon applied — ${inr(check.discount)} off`);
+  };
 
   const addLine = (p: { id: string; code: string; name: string; price: number }) => {
     setLines((prev) => {
@@ -117,6 +149,8 @@ function NewEnquiry() {
           message: form.message.trim() || null,
           status: "contacted",
           estimated_value: total,
+          coupon_code: discount > 0 && coupon ? coupon.code : null,
+          discount_amount: discount,
           item_count: itemCount,
         })
         .select("id")
@@ -135,6 +169,12 @@ function NewEnquiry() {
           })),
         );
         if (itemErr) throw itemErr;
+      }
+      if (discount > 0 && coupon) {
+        await supabase
+          .from("coupons")
+          .update({ used_count: coupon.used_count + 1 })
+          .eq("id", coupon.id);
       }
       return data.id as string;
     },
@@ -384,9 +424,40 @@ function NewEnquiry() {
             )}
           </div>
 
+          {/* Coupon — same codes and rules as the public enquiry page. */}
+          <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4">
+            <Label className="text-xs text-muted-foreground">Coupon</Label>
+            <Input
+              value={couponInput}
+              onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+              placeholder="Enter code"
+              className="h-9 w-40"
+            />
+            <Button type="button" variant="secondary" size="sm" onClick={() => void applyCoupon()}>
+              Apply
+            </Button>
+            {coupon && (
+              <button
+                type="button"
+                onClick={() => {
+                  setCoupon(null);
+                  setCouponInput("");
+                }}
+                className="text-xs font-medium text-report-rose underline"
+              >
+                Remove {coupon.code}
+              </button>
+            )}
+            {discount > 0 && (
+              <span className="text-sm font-semibold text-report-green">− {inr(discount)}</span>
+            )}
+          </div>
+
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
             <div>
-              <p className="text-xs text-muted-foreground">{itemCount} items</p>
+              <p className="text-xs text-muted-foreground">
+                {itemCount} items{discount > 0 ? ` · ${inr(subtotal)} before discount` : ""}
+              </p>
               <p className="text-xl font-semibold">{inr(total)}</p>
             </div>
             <Button
