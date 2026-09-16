@@ -779,14 +779,6 @@ function EnquiryDetail() {
                       {p.reference ? ` · ${p.reference}` : ""}
                     </p>
                   </div>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => deletePayment.mutate(p.id)}
-                    aria-label="Remove payment"
-                  >
-                    <X className="size-4" />
-                  </Button>
                 </div>
               ))}
               {(payments.data ?? []).length === 0 && (
