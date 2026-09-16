@@ -7,6 +7,7 @@ import {
   Pencil,
   Phone,
   Printer,
+  Star,
   Trash2,
   X,
 } from "lucide-react";
@@ -212,6 +213,12 @@ function EnquiryDetail() {
   const collected = (payments.data ?? []).reduce((s, p) => s + Number(p.amount), 0);
   const balance = Math.max(0, billAmount - collected);
   const paymentsDisabled = e.status === "not_converted";
+  // Lines bought at a Deal Store price get a star so the lower amount is not queried.
+  const dealMap = new Map((dealProducts.data ?? []).map((d) => [d.id, Number(d.deal_price ?? 0)]));
+  const isDealLine = (i: { product_id: string | null; unit_price: number | string }) =>
+    !!i.product_id &&
+    dealMap.has(i.product_id) &&
+    Number(dealMap.get(i.product_id)) === Number(i.unit_price);
   const quote = `Quotation for enquiry ${e.ref}\n${items
     .map((i) => `${i.product_name} x${i.qty} — ${inr(i.qty * Number(i.unit_price))}`)
     .join("\n")}\nTotal (indicative): ${inr(quotedValue)}\nSubject to final confirmation.`;

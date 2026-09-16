@@ -69,6 +69,7 @@
   --color-report-green: var(--report-green);
   --color-report-violet: var(--report-violet);
   --color-report-rose: var(--report-rose);
+  --color-report-amber: var(--report-amber);
 }
 
 :root {
@@ -105,6 +106,7 @@
   --report-green: oklch(0.66 0.16 145);
   --report-violet: oklch(0.61 0.18 300);
   --report-rose: oklch(0.63 0.2 20);
+  --report-amber: oklch(0.76 0.15 78);
   --sidebar: oklch(0.985 0.006 255);
   --sidebar-foreground: oklch(0.27 0.025 255);
   --sidebar-primary: oklch(0.56 0.16 252);
@@ -145,6 +147,7 @@
   --report-green: oklch(0.72 0.16 145);
   --report-violet: oklch(0.7 0.18 300);
   --report-rose: oklch(0.7 0.19 20);
+  --report-amber: oklch(0.8 0.15 78);
   --sidebar: oklch(0.208 0.042 265.755);
   --sidebar-foreground: oklch(0.984 0.003 247.858);
   --sidebar-primary: oklch(0.488 0.243 264.376);
