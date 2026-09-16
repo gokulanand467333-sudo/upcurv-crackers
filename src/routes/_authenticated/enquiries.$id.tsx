@@ -540,7 +540,11 @@ function EnquiryDetail() {
                       const next = Number(ev.target.value || 0);
                       if (!Number.isFinite(next) || next < 0 || next === delivery) return;
                       update.mutate(
-                        { delivery_charge: next },
+                        {
+                          delivery_charge: next,
+                          // Keep the list/payment views in sync with the new bill value.
+                          estimated_value: Math.max(0, quotedValue - discount) + next,
+                        },
                         {
                           onSuccess: () =>
                             logEdit(`Delivery charge ${inr(delivery)} → ${inr(next)}`),
