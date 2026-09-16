@@ -97,10 +97,19 @@ function NewEnquiry() {
       .select("*")
       .eq("code", code)
       .maybeSingle();
-    if (error) return toast.error(error.message);
-    if (!data) return toast.error("No coupon found with that code.");
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    if (!data) {
+      toast.error("No coupon found with that code.");
+      return;
+    }
     const check = couponDiscount(data, subtotal);
-    if (!check.ok) return toast.error(check.reason);
+    if (!check.ok) {
+      toast.error(check.reason);
+      return;
+    }
     setCoupon(data);
     toast.success(`Coupon applied — ${inr(check.discount)} off`);
   };
