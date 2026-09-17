@@ -448,6 +448,7 @@ export type Database = {
           name: string
           name_ta: string | null
           pack: string | null
+          popular_rank: number | null
           price: number
           tags: string[]
         }
@@ -466,6 +467,7 @@ export type Database = {
           name: string
           name_ta?: string | null
           pack?: string | null
+          popular_rank?: number | null
           price?: number
           tags?: string[]
         }
@@ -484,6 +486,7 @@ export type Database = {
           name?: string
           name_ta?: string | null
           pack?: string | null
+          popular_rank?: number | null
           price?: number
           tags?: string[]
         }
