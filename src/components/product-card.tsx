@@ -3,16 +3,16 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { categoryImage, type Product } from "@/lib/catalog";
+import { categoryImage, PROMO_TAG_LABEL, type Product } from "@/lib/catalog";
 import { useCart } from "@/lib/enquiry-cart";
 import { pick, useLang } from "@/lib/i18n";
 import { inr } from "@/lib/shop";
 
-const AVAIL_STYLES: Record<string, string> = {
-  available: "bg-emerald-50 text-emerald-700",
-  limited: "bg-amber-50 text-amber-700",
-  unavailable: "bg-rose-50 text-rose-700",
-  enquiry_only: "bg-muted text-muted-foreground",
+const AVAIL_DOTS: Record<string, string> = {
+  available: "bg-emerald-500",
+  limited: "bg-amber-500",
+  unavailable: "bg-rose-500",
+  enquiry_only: "bg-muted-foreground",
 };
 
 export function ProductCardSkeleton() {
@@ -43,6 +43,7 @@ export function ProductCard({
   const disabled = product.availability === "unavailable";
   const price = Number(product.price);
   const mrp = product.mrp ? Number(product.mrp) : null;
+  const promoTag = product.tags.find((tag) => PROMO_TAG_LABEL[tag]);
 
   return (
     <div className="group elevate elevate-hover flex flex-col overflow-hidden rounded-2xl border border-border bg-card">
@@ -55,11 +56,16 @@ export function ProductCard({
           height={900}
           className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
+        {promoTag && (
+          <span className="absolute left-2 top-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground shadow-sm">
+            {PROMO_TAG_LABEL[promoTag]}
+          </span>
+        )}
         <span
-          className={`absolute left-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-semibold ${AVAIL_STYLES[product.availability]}`}
-        >
-          {t(product.availability as "available")}
-        </span>
+          className={`absolute right-2 top-2 size-3 rounded-full border-2 border-card shadow-sm ${AVAIL_DOTS[product.availability]}`}
+          aria-label={t(product.availability as "available")}
+          title={t(product.availability as "available")}
+        />
       </div>
 
       <div className="flex flex-1 flex-col p-3">
