@@ -2,9 +2,9 @@ import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 
-import sparklers from "@/assets/cat-sparklers.jpg";
-import ground from "@/assets/cat-ground.jpg";
-import gift from "@/assets/cat-gift.jpg";
+import sparklers from "@/assets/cat-sparklers.jpg.asset.json";
+import ground from "@/assets/cat-ground.jpg.asset.json";
+import gift from "@/assets/cat-gift.jpg.asset.json";
 
 export type Product = Tables<"products">;
 export type Category = Tables<"categories">;
@@ -20,7 +20,7 @@ export const categoryImage = (slug: string | null | undefined) => {
     case "fancy":
       return gift;
     default:
-      return ground;
+      return ground.url;
   }
 };
 
@@ -56,6 +56,11 @@ export const PROMO_TAGS = [
   { key: "kids_safe", label: "Kids safe", emoji: "\ud83e\uddd2" },
   { key: "value", label: "Best value", emoji: "\ud83d\udcb0" },
   { key: "trending", label: "Trending now", emoji: "\ud83d\udd25" },
+  { key: "fast_moving", label: "Fast moving", emoji: "\u26a1" },
+  { key: "family_pick", label: "Family pick", emoji: "\ud83c\udfe0" },
+  { key: "limited_offer", label: "Limited offer", emoji: "\ud83c\udff7\ufe0f" },
+  { key: "premium_choice", label: "Premium choice", emoji: "\ud83d\udc8e" },
+  { key: "festival_fav", label: "Festival favourite", emoji: "\ud83e\ude94" },
 ] as const;
 
 export const PROMO_TAG_LABEL: Record<string, string> = Object.fromEntries(
@@ -78,6 +83,21 @@ export const productsQuery = queryOptions({
       .from("products")
       .select("*")
       .eq("active", true)
+      .order("code");
+    if (error) throw error;
+    return data;
+  },
+});
+
+export const popularProductsQuery = queryOptions({
+  queryKey: ["products", "popular"],
+  queryFn: async () => {
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("active", true)
+      .not("popular_rank", "is", null)
+      .order("popular_rank", { ascending: true })
       .order("code");
     if (error) throw error;
     return data;
