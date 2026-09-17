@@ -15,10 +15,10 @@ export const categoryImage = (slug: string | null | undefined) => {
     case "sparklers":
     case "flower-pots":
     case "kids":
-      return sparklers;
+      return sparklers.url;
     case "gift-boxes":
     case "fancy":
-      return gift;
+      return gift.url;
     default:
       return ground.url;
   }
