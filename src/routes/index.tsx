@@ -187,7 +187,7 @@ function Home() {
           </div>
           <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-lg">
             <img
-              src={heroAsset.url}
+              src={heroAsset}
               alt="Diwali crackers gift box, rockets, sparklers and a lit diya lamp"
               width={1456}
               height={1080}
