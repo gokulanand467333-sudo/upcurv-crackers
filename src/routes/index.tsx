@@ -6,7 +6,7 @@ import { Suspense } from "react";
 import { ProductCard, ProductCardSkeleton } from "@/components/product-card";
 import { LegalNotice, SiteShell } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
-import { categoriesQuery, combosQuery, productsQuery } from "@/lib/catalog";
+import { categoriesQuery, combosQuery, popularProductsQuery, productsQuery } from "@/lib/catalog";
 import { categoryIcon, categoryTint, comboIcon } from "@/lib/category-icons";
 import { useLang, pick } from "@/lib/i18n";
 import { inr, SHOP } from "@/lib/shop";
@@ -42,12 +42,15 @@ const COMBO_THEMES = [
 
 function FeaturedProducts() {
   const { data: products } = useSuspenseQuery(productsQuery);
+  const { data: picked } = useSuspenseQuery(popularProductsQuery);
   const { data: categories } = useSuspenseQuery(categoriesQuery);
   const slugOf = (id: string | null) => categories.find((c) => c.id === id)?.slug ?? null;
+  // Seller-chosen popular products; falls back to the catalogue order.
+  const list = (picked.length ? picked : products).slice(0, 8);
 
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-      {products.slice(0, 8).map((p) => (
+      {list.map((p) => (
         <ProductCard key={p.id} product={p} categorySlug={slugOf(p.category_id)} />
       ))}
     </div>
