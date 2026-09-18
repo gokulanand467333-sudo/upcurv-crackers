@@ -10,7 +10,7 @@ import { categoriesQuery, combosQuery, popularProductsQuery, productsQuery } fro
 import { categoryIcon, categoryTint, comboIcon } from "@/lib/category-icons";
 import { useLang, pick } from "@/lib/i18n";
 import { inr, SHOP } from "@/lib/shop";
-import heroAsset from "@/assets/hero-diwali.png.asset.json";
+import heroAsset from "@/assets/hero-diwali.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
