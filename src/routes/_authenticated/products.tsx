@@ -65,6 +65,7 @@ type Draft = {
   addon_rank: string;
   deal_rank: string;
   deal_price: string;
+  popular_rank: string;
 };
 
 const emptyDraft = (): Draft => ({
@@ -82,6 +83,7 @@ const emptyDraft = (): Draft => ({
   addon_rank: "",
   deal_rank: "",
   deal_price: "",
+  popular_rank: "",
 });
 
 const toDraft = (p: Product): Draft => ({
@@ -100,6 +102,7 @@ const toDraft = (p: Product): Draft => ({
   addon_rank: p.addon_rank == null ? "" : String(p.addon_rank),
   deal_rank: p.deal_rank == null ? "" : String(p.deal_rank),
   deal_price: p.deal_price == null ? "" : String(p.deal_price),
+  popular_rank: p.popular_rank == null ? "" : String(p.popular_rank),
 });
 
 
@@ -203,6 +206,7 @@ function ProductsAdmin() {
         active: d.active,
         addon_rank: d.addon_rank === "" ? null : Number(d.addon_rank),
         deal_rank: d.deal_rank === "" ? null : Number(d.deal_rank),
+        popular_rank: d.popular_rank === "" ? null : Number(d.popular_rank),
         deal_price: d.deal_price === "" ? null : Number(d.deal_price),
 
       };
@@ -692,6 +696,21 @@ function ProductsAdmin() {
                     >
                       Must be lower than the selling price
                       {draft.price ? ` (${inr(Number(draft.price))})` : ""}.
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                  <div className="space-y-1.5">
+                    <Label>Home popular position</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      placeholder="—"
+                      value={draft.popular_rank}
+                      onChange={(e) => setDraft({ ...draft, popular_rank: e.target.value })}
+                    />
+                    <p className="text-[11px] text-muted-foreground">
+                      Set a number to show this product in “Popular” on the home page.
                     </p>
                   </div>
                 </div>

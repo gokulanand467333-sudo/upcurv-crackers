@@ -92,6 +92,7 @@ create table if not exists public.products (
   tags text[] not null default '{}',
   addon_rank integer,
   deal_rank integer,
+  popular_rank integer,
   active boolean not null default true,
   created_at timestamptz not null default now()
 );
