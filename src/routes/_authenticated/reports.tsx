@@ -180,14 +180,18 @@ function ReportsPage() {
   const prevAdds = prevEv.filter((e) => e.kind === "add_to_cart").length;
   const prevViews = prevEv.filter((e) => e.kind === "page_view").length;
 
+  // Conversion = enquiries actually received vs visitors seen. Event-based
+  // counting missed submissions whose tracking call never landed.
   const enquirySessions = new Set(
     ev.filter((e) => e.kind === "enquiry_submit").map((e) => e.session_id),
   ).size;
-  const conversion = visitors ? (enquirySessions / visitors) * 100 : 0;
+  const converted = Math.max(enquirySessions, enq.length);
+  const conversion = visitors ? Math.min(100, (converted / visitors) * 100) : 0;
   const prevEnquirySessions = new Set(
     prevEv.filter((e) => e.kind === "enquiry_submit").map((e) => e.session_id),
   ).size;
-  const prevConversion = prevVisitors ? (prevEnquirySessions / prevVisitors) * 100 : 0;
+  const prevConverted = Math.max(prevEnquirySessions, prevEnq.length);
+  const prevConversion = prevVisitors ? Math.min(100, (prevConverted / prevVisitors) * 100) : 0;
 
   const won = (list: Enquiry[]) =>
     list.filter((e) => ["completed", "confirmed", "ready"].includes(e.status));
@@ -279,19 +283,18 @@ function ReportsPage() {
   const daily = (() => {
     const map = new Map<
       string,
-      { day: string; visitors: number; views: number; adds: number; enquiries: number }
+      { day: string; visitors: number; adds: number; enquiries: number }
     >();
     const seen = new Map<string, Set<string>>();
     for (let i = days - 1; i >= 0; i--) {
       const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
-      map.set(d, { day: d.slice(5), visitors: 0, views: 0, adds: 0, enquiries: 0 });
+      map.set(d, { day: d.slice(5), visitors: 0, adds: 0, enquiries: 0 });
       seen.set(d, new Set());
     }
     for (const e of ev) {
       const key = e.created_at.slice(0, 10);
       const row = map.get(key);
       if (!row) continue;
-      if (e.kind === "page_view") row.views += 1;
       if (e.kind === "add_to_cart") row.adds += 1;
       // A visitor counts once per day, whatever they did.
       const bucket = seen.get(key)!;
@@ -421,7 +424,7 @@ function ReportsPage() {
           <div className="mt-4 grid min-w-0 gap-4 xl:grid-cols-3">
             <Panel
               title="Daily activity"
-              subtitle="Page views, cart adds and enquiries"
+              subtitle="Visitors, cart adds and enquiries"
               className="xl:col-span-2"
             >
               <div className="h-72 w-full min-w-0">
@@ -446,14 +449,6 @@ function ReportsPage() {
                       name="Visitors"
                       stroke="var(--report-violet)"
                       fill="url(#g-violet)"
-                      strokeWidth={2}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="views"
-                      name="Page views"
-                      stroke="var(--report-blue)"
-                      fill="url(#g-blue)"
                       strokeWidth={2}
                     />
                     <Area

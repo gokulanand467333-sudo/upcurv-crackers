@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -81,6 +81,30 @@ function CategoriesPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  /** Swap the sort value with the neighbour above/below. */
+  const move = useMutation({
+    mutationFn: async ({ index, dir }: { index: number; dir: -1 | 1 }) => {
+      const list = data ?? [];
+      const a = list[index];
+      const b = list[index + dir];
+      if (!a || !b) return;
+      // Equal sort values would make the swap a no-op, so fall back to positions.
+      const sortA = a.sort === b.sort ? index + dir : b.sort;
+      const sortB = a.sort === b.sort ? index : a.sort;
+      const results = await Promise.all([
+        supabase.from("categories").update({ sort: sortA }).eq("id", a.id),
+        supabase.from("categories").update({ sort: sortB }).eq("id", b.id),
+      ]);
+      const failed = results.find((r) => r.error);
+      if (failed?.error) throw failed.error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "categories"] });
+      qc.invalidateQueries({ queryKey: ["categories"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   return (
     <AdminShell>
       <div className="flex flex-wrap items-center gap-3">
@@ -93,7 +117,7 @@ function CategoriesPage() {
       <div className="mt-5 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
         {isLoading &&
           Array.from({ length: 5 }).map((_, i) => <div key={i} className="shimmer h-16 w-full" />)}
-        {(data ?? []).map((c) => (
+        {(data ?? []).map((c, i, arr) => (
           <div key={c.id} className="flex items-center gap-3 p-3">
             <span className="text-xl">{c.emoji}</span>
             <button className="min-w-0 flex-1 text-left" onClick={() => setDraft(c)}>
@@ -102,6 +126,24 @@ function CategoriesPage() {
                 {c.slug} · {c.experience ?? "—"} · sort {c.sort}
               </p>
             </button>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Move up"
+              disabled={i === 0 || move.isPending}
+              onClick={() => move.mutate({ index: i, dir: -1 })}
+            >
+              <ChevronUp className="size-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Move down"
+              disabled={i === arr.length - 1 || move.isPending}
+              onClick={() => move.mutate({ index: i, dir: 1 })}
+            >
+              <ChevronDown className="size-4" />
+            </Button>
             <Button
               variant="ghost"
               size="icon"
