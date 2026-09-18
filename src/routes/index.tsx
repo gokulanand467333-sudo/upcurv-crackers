@@ -10,7 +10,7 @@ import { categoriesQuery, combosQuery, popularProductsQuery, productsQuery } fro
 import { categoryIcon, categoryTint, comboIcon } from "@/lib/category-icons";
 import { useLang, pick } from "@/lib/i18n";
 import { inr, SHOP } from "@/lib/shop";
-import heroAsset from "@/assets/hero-diwali.png";
+import heroAsset from "@/assets/hero-diwali.png.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -187,7 +187,7 @@ function Home() {
           </div>
           <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-lg">
             <img
-              src={heroAsset}
+              src={heroAsset.url}
               alt="Diwali crackers gift box, rockets, sparklers and a lit diya lamp"
               width={1456}
               height={1080}
