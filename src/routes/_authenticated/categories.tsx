@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -73,6 +73,27 @@ function CategoriesPage() {
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("categories").delete().eq("id", id);
       if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "categories"] });
+      qc.invalidateQueries({ queryKey: ["categories"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  /** Swap the sort value with the neighbour above/below. */
+  const move = useMutation({
+    mutationFn: async ({ index, dir }: { index: number; dir: -1 | 1 }) => {
+      const list = data ?? [];
+      const a = list[index];
+      const b = list[index + dir];
+      if (!a || !b) return;
+      const results = await Promise.all([
+        supabase.from("categories").update({ sort: b.sort }).eq("id", a.id),
+        supabase.from("categories").update({ sort: a.sort }).eq("id", b.id),
+      ]);
+      const failed = results.find((r) => r.error);
+      if (failed?.error) throw failed.error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin", "categories"] });
